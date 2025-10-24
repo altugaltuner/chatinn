@@ -25,8 +25,10 @@ app.get("/api/hello", (req, res) => {
 });
 
 const usersRouter = require('./routes/users.js'); // burada users.js dosyasını import ediyoruz ve usersRoutera atıyoruz.
-app.use('/api/users', usersRouter); // usersRouter'ı /api/users yoluna ekliyoruz sunucuda. http://localhost:3001/api/users buraya gidince gelebilsin diye.
+const userRouter = require('./routes/user.js'); // Tek kullanıcı için route
 
+app.use('/api/users', usersRouter); // usersRouter'ı /api/users yoluna ekliyoruz sunucuda. http://localhost:3001/api/users buraya gidince gelebilsin diye.
+app.use('/api/user', userRouter); // Tek kullanıcı için: http://localhost:3001/api/user/1
 
 
 
