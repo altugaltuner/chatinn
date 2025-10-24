@@ -64,15 +64,15 @@ export default function UserProfilePage({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4">
+    <div className="min-h-screen bg-white dark:bg-black py-12 px-4">
       <div className="max-w-4xl mx-auto">
         
         {/* Ana Profil Kartı */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden">
+        <div className="bg-gray-50 dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
           
           {/* Header Background */}
-          <div className="h-48 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 relative">
-            <div className="absolute inset-0 bg-black opacity-10"></div>
+          <div className="h-48 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 relative">
+            <div className="absolute inset-0 bg-white opacity-5"></div>
           </div>
 
           {/* Profil Resmi ve Bilgiler */}
@@ -80,7 +80,7 @@ export default function UserProfilePage({
             {/* Profil Resmi */}
             <div className="flex justify-center -mt-24 mb-6">
               <div className="relative">
-                <div className="w-48 h-48 rounded-full border-8 border-white dark:border-gray-800 overflow-hidden shadow-xl">
+                <div className="w-48 h-48 rounded-full border-8 border-gray-50 dark:border-gray-900 overflow-hidden shadow-2xl">
                   <Image
                     src={user.picture || '/defaultpp.jpg'}
                     alt={user.name}
@@ -89,40 +89,40 @@ export default function UserProfilePage({
                   />
                 </div>
                 {/* Online Indicator */}
-                <div className="absolute bottom-4 right-4 w-8 h-8 bg-green-500 rounded-full border-4 border-white dark:border-gray-800"></div>
+                <div className="absolute bottom-4 right-4 w-8 h-8 bg-gray-900 dark:bg-white rounded-full border-4 border-gray-50 dark:border-gray-900"></div>
               </div>
             </div>
 
             {/* İsim ve Email */}
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-slate-800 dark:text-white mb-2">
+              <h1 className="text-4xl font-bold text-black dark:text-white mb-2">
                 {user.name}
               </h1>
-              <p className="text-slate-500 dark:text-slate-400 text-lg mb-1">
+              <p className="text-gray-600 dark:text-gray-400 text-lg mb-1">
                 {user.email}
               </p>
-              <p className="text-slate-400 text-sm">
+              <p className="text-gray-500 dark:text-gray-500 text-sm">
                 Katılma Tarihi: {user.created_at ? new Date(user.created_at).toLocaleDateString('tr-TR') : 'Bilinmiyor'}
               </p>
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-4 justify-center mb-8">
-              <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+              <button className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
                 Arkadaşa Ekle
               </button>
 
-              <button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+              <button className="flex items-center gap-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 Mesaj At
               </button>
 
-              <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+              <button className="flex items-center gap-2 bg-gray-600 dark:bg-gray-400 text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
@@ -132,29 +132,29 @@ export default function UserProfilePage({
 
             {/* İstatistikler */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200">
-                <div className="text-4xl font-bold text-blue-600 dark:text-blue-300 mb-2">
+              <div className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200 shadow-sm">
+                <div className="text-4xl font-bold text-black dark:text-white mb-2">
                   {stats.friends}
                 </div>
-                <div className="text-slate-600 dark:text-slate-300 font-medium">
+                <div className="text-gray-600 dark:text-gray-400 font-medium">
                   Arkadaş
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200">
-                <div className="text-4xl font-bold text-purple-600 dark:text-purple-300 mb-2">
+              <div className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200 shadow-sm">
+                <div className="text-4xl font-bold text-black dark:text-white mb-2">
                   {stats.groups}
                 </div>
-                <div className="text-slate-600 dark:text-slate-300 font-medium">
+                <div className="text-gray-600 dark:text-gray-400 font-medium">
                   Grup
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900 dark:to-pink-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200">
-                <div className="text-4xl font-bold text-pink-600 dark:text-pink-300 mb-2">
+              <div className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200 shadow-sm">
+                <div className="text-4xl font-bold text-black dark:text-white mb-2">
                   {stats.posts}
                 </div>
-                <div className="text-slate-600 dark:text-slate-300 font-medium">
+                <div className="text-gray-600 dark:text-gray-400 font-medium">
                   Gönderi
                 </div>
               </div>
@@ -167,28 +167,28 @@ export default function UserProfilePage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           
           {/* Hakkında */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-              <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-lg p-6">
+            <h3 className="text-xl font-bold text-black dark:text-white mb-4 flex items-center gap-2">
+              <svg className="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Hakkında
             </h3>
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-gray-600 dark:text-gray-400">
               Merhaba! Ben {user.name}. Chat uygulamasında aktif bir kullanıcıyım.
             </p>
           </div>
 
           {/* Son Aktiviteler */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-lg p-6">
+            <h3 className="text-xl font-bold text-black dark:text-white mb-4 flex items-center gap-2">
+              <svg className="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               Aktivite
             </h3>
-            <p className="text-slate-600 dark:text-slate-400">
-              Son görülme: <span className="text-green-600 font-semibold">Çevrimiçi</span>
+            <p className="text-gray-600 dark:text-gray-400">
+              Son görülme: <span className="text-black dark:text-white font-semibold">Çevrimiçi</span>
             </p>
           </div>
 
