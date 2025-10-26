@@ -3,13 +3,20 @@
 import { use, useEffect, useState } from "react";
 import Image from "next/image";
 
+interface Group {
+  id: number;
+  name: string;
+  member_count: number;
+}
+
 interface User {
-    id: number;
-    name: string;
-    email: string;
-    picture?: string;
-    created_at?: string;
-  }
+  id: number;
+  name: string;
+  email: string;
+  picture?: string;
+  created_at?: string;
+  groups?: Group[];
+}
 
 export default function UserProfilePage({
   params,
@@ -56,20 +63,20 @@ export default function UserProfilePage({
     );
   }
 
-  // Hardcoded istatistikler (şimdilik)
+  // İstatistikler
   const stats = {
-    friends: 156,
-    groups: 8,
-    posts: 342
+    friends: 156, // Şimdilik hardcoded
+    groups: user.groups?.length || 0,
+    posts: 342 // Şimdilik hardcoded
   };
 
   return (
     <div className="min-h-screen bg-white dark:bg-black py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        
+
         {/* Ana Profil Kartı */}
         <div className="bg-gray-50 dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
-          
+
           {/* Header Background */}
           <div className="h-48 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 relative">
             <div className="absolute inset-0 bg-white opacity-5"></div>
@@ -163,9 +170,45 @@ export default function UserProfilePage({
           </div>
         </div>
 
+        {/* Gruplar Bölümü */}
+        {user.groups && user.groups.length > 0 && (
+          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-lg p-6 mt-8">
+            <h3 className="text-2xl font-bold text-black dark:text-white mb-6 flex items-center gap-2">
+              <svg className="w-7 h-7 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Üye Olduğu Gruplar
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {user.groups.map((group) => (
+                <div
+                  key={group.id}
+                  className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded-xl p-5 hover:shadow-xl transition-all duration-200 cursor-pointer hover:scale-105 transform"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h4 className="font-bold text-black dark:text-white text-lg mb-1 line-clamp-1">
+                        {group.name}
+                      </h4>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span className="text-sm font-medium">
+                      {group.member_count} üye
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Ek Bilgiler Kartları */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          
+
           {/* Hakkında */}
           <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-lg p-6">
             <h3 className="text-xl font-bold text-black dark:text-white mb-4 flex items-center gap-2">
