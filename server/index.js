@@ -16,20 +16,29 @@ app.use(cors()); // cors policy'yi ayarla
 app.use(express.json()); // express app'a json verileri alabilmek için
 
 app.listen(3001, () => {
-    console.log('Server running on http://localhost:3001');
-  });
-
-app.get("/api/hello", (req, res) => {
-    // res.send("Hello World");
-    res.json({ message: 'Hello from backend!' });
+  console.log('Server running on http://localhost:3001');
 });
 
+app.get("/api/hello", (req, res) => {
+  // res.send("Hello World");
+  res.json({ message: 'Hello from backend!' });
+});
+
+//IMPORTS
 const usersRouter = require('./routes/users.js'); // burada users.js dosyasını import ediyoruz ve usersRoutera atıyoruz.
 const userRouter = require('./routes/user.js'); // Tek kullanıcı için route
+const publicGroupsRouter = require('./routes/public-groups.js');
+const privateGroupsRouter = require('./routes/private-groups.js');
+const groupsRouter = require('./routes/groups.js');
+const authRouter = require('./routes/auth.js'); // Authentication route
 
+
+app.use('/api/auth', authRouter); // Authentication: http://localhost:3001/api/auth/signin, /signup
+app.use('/api/private-groups', privateGroupsRouter);
 app.use('/api/users', usersRouter); // usersRouter'ı /api/users yoluna ekliyoruz sunucuda. http://localhost:3001/api/users buraya gidince gelebilsin diye.
 app.use('/api/user', userRouter); // Tek kullanıcı için: http://localhost:3001/api/user/1
-
+app.use('/api/public-groups', publicGroupsRouter);
+app.use('/api/groups', groupsRouter)
 
 
 
