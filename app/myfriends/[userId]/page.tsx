@@ -1,0 +1,146 @@
+"use client";
+import { use, useEffect, useState } from "react";
+import { useAuth } from "@/lib/AuthContext";
+import Image from "next/image";
+import Link from "next/link";
+
+interface Friend {
+    id: number;
+    name: string;
+    picture?: string;
+}
+
+export default function MyFriendsPage({
+    params,
+}: {
+    params: Promise<{ userId: string }>;
+}) {
+    const { userId } = use(params);
+    const { user: currentUser } = useAuth();
+    const [friends, setFriends] = useState<Friend[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch(`http://localhost:3001/api/friendships/myfriends/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                setFriends(data);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Arkadaşları getirme hatası:', err);
+                setLoading(false);
+            });
+    }, [userId]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-slate-600 dark:text-slate-400">Arkadaşlar yükleniyor...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!friends || friends.length === 0) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="text-center">
+                    <div className="text-6xl mb-4">👥</div>
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+                        Henüz arkadaşınız yok
+                    </h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-6">
+                        Arkadaş ekleyerek sohbete başlayın!
+                    </p>
+                    <Link 
+                        href="/users"
+                        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors font-semibold"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                        Kullanıcıları Keşfet
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    const isOwnProfile = currentUser && currentUser.id === parseInt(userId);
+
+    return (
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+            <div className="max-w-7xl mx-auto">
+                {/* Başlık */}
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
+                        {isOwnProfile ? 'Arkadaşlarım' : 'Arkadaşları'}
+                    </h1>
+                    <p className="text-slate-600 dark:text-slate-400">
+                        {friends.length} arkadaş bulundu
+                    </p>
+                </div>
+
+                {/* Grid Yapısı */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {friends.map((friend) => (
+                        <div
+                            key={friend.id}
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700"
+                        >
+                            {/* Profil Resmi */}
+                            <Link href={`/user/${friend.id}`}>
+                                <div className="aspect-square bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center relative cursor-pointer hover:opacity-90 transition-opacity">
+                                    <div className="w-full h-full relative">
+                                        <Image
+                                            src={friend.picture || '/defaultpp.jpg'}
+                                            alt={friend.name}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    {/* Online Badge (optional) */}
+                                    <div className="absolute bottom-3 right-3">
+                                        <span className="w-4 h-4 bg-green-500 border-2 border-white rounded-full block"></span>
+                                    </div>
+                                </div>
+                            </Link>
+
+                            {/* Alt Kısım - Bilgiler ve Butonlar */}
+                            <div className="p-4">
+                                <Link href={`/user/${friend.id}`}>
+                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-3 truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">
+                                        {friend.name}
+                                    </h3>
+                                </Link>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-2">
+                                    <button className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg transition-colors font-medium text-sm">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                        </svg>
+                                        Mesaj
+                                    </button>
+
+                                    <Link 
+                                        href={`/user/${friend.id}`}
+                                        className="flex items-center justify-center bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-2 px-3 rounded-lg transition-colors"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+

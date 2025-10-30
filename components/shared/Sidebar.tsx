@@ -45,15 +45,15 @@ export default function Sidebar() {
           )}
         </Link>
 
-        {/* Durumlar */}
+        {/* Arkadaşlarım */}
         <Link
-          href="/status"
+          href={`/myfriends/${user?.id}`}
           className={`flex items-center justify-center py-3 transition-colors relative group ${
             isActive("/status")
               ? "text-white"
               : "text-gray-400 hover:text-white"
           }`}
-          title="Durumlar"
+          title="Arkadaşlarım"
         >
           <svg
             className="w-6 h-6"

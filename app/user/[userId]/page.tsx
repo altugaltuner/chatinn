@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import Image from "next/image";
+import { useAuth } from "@/lib/AuthContext";
 
 interface Group {
   id: number;
@@ -24,8 +25,14 @@ export default function UserProfilePage({
   params: Promise<{ userId: string }>;
 }) {
   const { userId } = use(params); // react.use hook'u ile params'ı alıyoruz. çünkü params promise'dir.
+  const { user: currentUser } = useAuth(); // Login olmuş kullanıcı
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [friendRequestSent, setFriendRequestSent] = useState(false);
+  const [sendingRequest, setSendingRequest] = useState(false);
+
+  // Bu profil sayfası login olmuş kullanıcının kendi profili mi?
+  const isOwnProfile = currentUser && currentUser.id === parseInt(userId);
 
   useEffect(() => {
     fetch(`http://localhost:3001/api/user/${userId}`)
@@ -39,6 +46,52 @@ export default function UserProfilePage({
         setLoading(false);
       });
   }, [userId]);
+
+  // Arkadaşlık isteği gönderme fonksiyonu
+  const handleAddFriend = async () => {
+    if (!currentUser) {
+      alert("Arkadaş eklemek için giriş yapmalısınız!");
+      return;
+    }
+
+    setSendingRequest(true);
+
+    const requestData = {
+      user_id: currentUser.id,
+      friend_id: parseInt(userId),
+      status: 'pending'
+    };
+
+    console.log('Gönderilen veri:', requestData);
+
+    //sunucuya istek gönder
+    try {
+      const response = await fetch('http://localhost:3001/api/friendships', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestData),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Başarılı yanıt:', data); 
+        setFriendRequestSent(true); // arkadaşlık isteği gönderildi
+        
+        // 2 saniye sonra "Gönderildi" yazısını kaldır
+        setTimeout(() => {
+          setFriendRequestSent(false);
+        }, 2000);
+      } else {
+        const error = await response.json();
+        console.error('Hata yanıtı:', error);
+        alert(error.message || 'Arkadaşlık isteği gönderilemedi');
+      }
+    } catch (error) {
+      console.error('Arkadaş ekleme hatası:', error);
+      alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setSendingRequest(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -71,11 +124,11 @@ export default function UserProfilePage({
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black py-12 px-4">
+    <div className="min-h-screen bg-white dark:bg-gray-900 py-12 px-4">
       <div className="max-w-4xl mx-auto">
 
         {/* Ana Profil Kartı */}
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-900">
 
           {/* Header Background */}
           <div className="h-48 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 relative">
@@ -113,59 +166,89 @@ export default function UserProfilePage({
               </p>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4 justify-center mb-8">
-              <button className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-                Arkadaşa Ekle
-              </button>
+            {/* Action Buttons - Sadece başkasının profilinde göster */}
+            {!isOwnProfile && (
+              <div className="flex flex-wrap gap-4 justify-center mb-8">
+                <button 
+                  onClick={handleAddFriend}
+                  disabled={sendingRequest || friendRequestSent}
+                  className={`flex items-center gap-2 font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none ${
+                    friendRequestSent 
+                      ? 'bg-green-600 text-white' 
+                      : 'bg-black dark:bg-white text-white dark:text-black'
+                  }`}
+                >
+                  {sendingRequest ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Gönderiliyor...
+                    </>
+                  ) : friendRequestSent ? (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Gönderildi
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                      Arkadaşa Ekle
+                    </>
+                  )}
+                </button>
 
-              <button className="flex items-center gap-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                Mesaj At
-              </button>
+                <button className="flex items-center gap-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Mesaj At
+                </button>
 
-              <button className="flex items-center gap-2 bg-gray-600 dark:bg-gray-400 text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                Titreşim Gönder
-              </button>
-            </div>
+                <button className="flex items-center gap-2 bg-gray-600 dark:bg-gray-400 text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  Titreşim Gönder
+                </button>
+              </div>
+            )}
 
-            {/* İstatistikler */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200 shadow-sm">
-                <div className="text-4xl font-bold text-black dark:text-white mb-2">
-                  {stats.friends}
+            {/* İstatistikler - Sadece başkasının profilinde göster */}
+            {!isOwnProfile && (
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200 shadow-sm">
+                  <div className="text-4xl font-bold text-black dark:text-white mb-2">
+                    {stats.friends}
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-400 font-medium">
+                    Arkadaş
+                  </div>
                 </div>
-                <div className="text-gray-600 dark:text-gray-400 font-medium">
-                  Arkadaş
+
+                <div className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200 shadow-sm">
+                  <div className="text-4xl font-bold text-black dark:text-white mb-2">
+                    {stats.groups}
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-400 font-medium">
+                    Grup
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200 shadow-sm">
+                  <div className="text-4xl font-bold text-black dark:text-white mb-2">
+                    {stats.posts}
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-400 font-medium">
+                    Gönderi
+                  </div>
                 </div>
               </div>
-
-              <div className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200 shadow-sm">
-                <div className="text-4xl font-bold text-black dark:text-white mb-2">
-                  {stats.groups}
-                </div>
-                <div className="text-gray-600 dark:text-gray-400 font-medium">
-                  Grup
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded-2xl p-6 text-center transform hover:scale-105 transition-transform duration-200 shadow-sm">
-                <div className="text-4xl font-bold text-black dark:text-white mb-2">
-                  {stats.posts}
-                </div>
-                <div className="text-gray-600 dark:text-gray-400 font-medium">
-                  Gönderi
-                </div>
-              </div>
-            </div>
+            )}
 
           </div>
         </div>
