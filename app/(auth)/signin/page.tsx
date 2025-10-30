@@ -3,9 +3,11 @@ import { useRouter } from "next/navigation";
 import { useState, FormEvent } from "react";
 import Link from "next/link";
 import Header from "@/components/shared/Header";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function SignInPage() {
     const router = useRouter();
+    const { login } = useAuth();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -33,8 +35,8 @@ export default function SignInPage() {
                 return;
             }
 
-            // Başarılı giriş - kullanıcı bilgilerini localStorage'a kaydet
-            localStorage.setItem("user", JSON.stringify(data.user));
+            // Başarılı giriş - Context'e kaydet (otomatik olarak localStorage'a da kaydedilecek)
+            login(data.user);
             router.push("/chats");
         } catch (err) {
             setError("Sunucuya bağlanılamadı");
