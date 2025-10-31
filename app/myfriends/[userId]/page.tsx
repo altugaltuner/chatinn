@@ -1,5 +1,5 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,6 +8,15 @@ interface Friend {
     id: number;
     name: string;
     picture?: string;
+}
+
+interface Request {
+    user_id: number;
+    friend_id: number;
+    status: string;
+    created_at: string;
+    sender_name: string;
+    sender_picture: string;
 }
 
 export default function MyFriendsPage({
@@ -20,7 +29,57 @@ export default function MyFriendsPage({
     const [friends, setFriends] = useState<Friend[]>([]);
     const [loading, setLoading] = useState(true);
     const [pendingRequests, setPendingRequests] = useState<number>(0);
+    const [requests, setRequests] = useState<Request[]>([]);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+    const handleAcceptRequest = async (senderId: number, receiverId: number) => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/friendships/accept/${senderId}/${receiverId}`, {
+                method: 'PUT',
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('İstek kabul edildi:', data);
+                
+                // Liste'den kaldır ve pending sayısını güncelle
+                setRequests(prev => prev.filter(req => !(req.user_id === senderId && req.friend_id === receiverId)));
+                setPendingRequests(prev => prev - 1);
+                
+                // Arkadaşlar listesini yenile
+                const friendsResponse = await fetch(`http://localhost:3001/api/friendships/myfriends/${userId}`);
+                const friendsData = await friendsResponse.json();
+                setFriends(friendsData);
+            } else {
+                throw new Error('İstek kabul edilemedi');
+            }
+        } catch (err) {
+            console.error('İstek kabul edilemedi:', err);
+            alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        }
+    };
+
+    const handleRejectRequest = async (senderId: number, receiverId: number) => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/friendships/reject/${senderId}/${receiverId}`, {
+                method: 'PUT',
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('İstek reddedildi:', data);
+                
+                // Liste'den kaldır ve pending sayısını güncelle
+                setRequests(prev => prev.filter(req => !(req.user_id === senderId && req.friend_id === receiverId)));
+                setPendingRequests(prev => prev - 1);
+            } else {
+                throw new Error('İstek reddedilemedi');
+            }
+        } catch (err) {
+            console.error('İstek reddedilemedi:', err);
+            alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        }
+    };
 
     useEffect(() => {
         // Arkadaşları çek
@@ -41,6 +100,7 @@ export default function MyFriendsPage({
                 .then(res => res.json())
                 .then(data => {
                     setPendingRequests(data.length);
+                    setRequests(data);
                 })
                 .catch(err => {
                     console.error('İstekler getirilemedi:', err);
@@ -48,11 +108,18 @@ export default function MyFriendsPage({
         }
     }, [userId, currentUser]);
 
+    const isNotificationOpenRef = useRef(isNotificationOpen);
+
+    useEffect(() => {
+        isNotificationOpenRef.current = isNotificationOpen;
+    }, [isNotificationOpen]);
+
+
     // Dropdown dışına tıklandığında kapat
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
-            if (isNotificationOpen && !target.closest('.notification-dropdown')) {
+            if (isNotificationOpenRef.current && !target.closest('.notification-dropdown')) {
                 setIsNotificationOpen(false);
             }
         };
@@ -61,7 +128,7 @@ export default function MyFriendsPage({
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isNotificationOpen]);
+    }, []);
 
     if (loading) {
         return (
@@ -107,7 +174,7 @@ export default function MyFriendsPage({
                 {/* Başlık ve Bildirim Butonu */}
                 <div className="mb-8 relative">
                     <div className="flex items-center justify-between">
-                        <div>
+        <div>
                             <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
                                 {isOwnProfile ? 'Arkadaşlarım' : 'Arkadaşları'}
                             </h1>
@@ -159,12 +226,65 @@ export default function MyFriendsPage({
                                             </p>
                                         </div>
 
-                                        {/* İçerik Alanı - Şimdilik boş */}
+                                        {/* İçerik Alanı */}
                                         <div className="p-4 max-h-96 overflow-y-auto">
-                                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                                                <p>İstekler burada görünecek...</p>
-                                                <p className="text-sm mt-2">Yakında eklenecek!</p>
-                                            </div>
+                                            {requests.length === 0 ? (
+                                                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                                    <p>Bekleyen istek yok</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {requests.map((request) => (
+                                                        <div 
+                                                            key={`${request.user_id}-${request.friend_id}`} 
+                                                            className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                        >
+                                                            {/* Profil Resmi */}
+                                                            <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                                                                <Image 
+                                                                    src={request.sender_picture || '/defaultpp.jpg'} 
+                                                                    alt={request.sender_name} 
+                                                                    width={48} 
+                                                                    height={48}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            </div>
+                                                            
+                                                            {/* İsim ve Tarih */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+                                                                    {request.sender_name}
+                                                                </h4>
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {new Date(request.created_at).toLocaleDateString('tr-TR')}
+                                                                </p>
+                                                            </div>
+
+                                                            {/* Butonlar */}
+                                                            <div className="flex gap-2 flex-shrink-0">
+                                                                <button 
+                                                                    onClick={() => handleAcceptRequest(request.user_id, request.friend_id)} 
+                                                                    className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                                                                    title="Kabul Et"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleRejectRequest(request.user_id, request.friend_id)} 
+                                                                    className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                                                                    title="Reddet"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -175,7 +295,7 @@ export default function MyFriendsPage({
 
                 {/* Grid Yapısı */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {friends.map((friend) => (
+            {friends.map((friend) => (
                         <div
                             key={friend.id}
                             className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700"

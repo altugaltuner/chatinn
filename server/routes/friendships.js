@@ -114,7 +114,10 @@ router.get('/requests/:userId', async (req, res) => {
   try {
     const query = `
       SELECT 
-        f.*,
+        f.user_id,
+        f.friend_id,
+        f.status,
+        f.created_at,
         u.name as sender_name,
         u.picture as sender_picture
       FROM friendships f
@@ -123,6 +126,7 @@ router.get('/requests/:userId', async (req, res) => {
       ORDER BY f.created_at DESC
     `;
     const result = await db.query(query, [userId]);
+    console.log('📤 Backend - Gönderilen requests:', JSON.stringify(result.rows, null, 2)); // Debug
     res.json(result.rows);
   } catch (error) {
     console.error('Arkadaşlık isteklerini getirme hatası:', error);
@@ -215,6 +219,42 @@ router.get('/myfriends/:userId', async (req, res) => {
     res.status(500).json({ error: 'Sunucu hatası' });
   }
 });
+
+// Arkadaşlık isteğini kabul et (user_id ve friend_id ile)
+router.put('/accept/:userId/:friendId', async (req, res) => {
+  const { userId, friendId } = req.params;
+  try {
+    const updateQuery = `
+      UPDATE friendships 
+      SET status = $1 
+      WHERE user_id = $2 AND friend_id = $3
+    `;
+    await db.query(updateQuery, ['accepted', userId, friendId]);
+    res.json({ message: 'Arkadaşlık isteği kabul edildi', success: true });
+  } catch (error) {
+    console.error('Arkadaşlık isteği kabul edilemedi:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Arkadaşlık isteğini reddet (user_id ve friend_id ile)
+router.put('/reject/:userId/:friendId', async (req, res) => {
+  const { userId, friendId } = req.params;
+  try {
+    const updateQuery = `
+      UPDATE friendships 
+      SET status = $1 
+      WHERE user_id = $2 AND friend_id = $3
+    `;
+
+    await db.query(updateQuery, ['rejected', userId, friendId]);
+    res.json({ message: 'Arkadaşlık isteği reddedildi', success: true });
+  } catch (error) {
+    console.error('Arkadaşlık isteği reddedilemedi:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
 
 module.exports = router;
 
