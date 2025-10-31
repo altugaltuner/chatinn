@@ -11,9 +11,15 @@ console.log("PG_HOST:", process.env.PG_HOST);
 console.log("PG_PASSWORD:", process.env.PG_PASSWORD);
 console.log("==================================");
 
+
+// Bunların hepsi middleware'lerdir.
 const app = express(); // express app oluştur
-app.use(cors()); // cors policy'yi ayarla
+app.use(cors()); // cors policy'yi ayarla, 
+// Bu demek: "Tüm origin'lerden gelen isteklere izin ver!"
+// Yani frontend'den backend'e istek atabilirsin
 app.use(express.json()); // express app'a json verileri alabilmek için
+// end line of middlewares
+
 
 app.listen(3001, () => {
   console.log("Server running on http://localhost:3001");

@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
     res.json(groupsResult.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Kullanıcı bulunamadı" });
+    res.status(404).json({ error: "Kullanıcı bulunamadı" });
   }
 });
 
@@ -76,7 +76,7 @@ router.post("/:group_id/join", async (req,res) => {
   try {
     // 2 parametre - 2 değer gönder (is_admin zaten default false)
     const insertJoinRequestQuery = `INSERT INTO chat_members (user_id, chat_group_id) VALUES ($1, $2)`;
-    await db.query(insertJoinRequestQuery, [user_id, id]);
+    await db.query(insertJoinRequestQuery, [user_id, group_id]);
     res.status(201).json({ message: "Grupa katılım isteği gönderildi", success: true });
   } catch (err) {
     console.error("Katılım hatası:", err.message);
