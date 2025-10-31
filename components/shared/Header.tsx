@@ -17,9 +17,7 @@ export default function Header() {
     <header className="border-b border-gray-200 dark:border-gray-800">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-black dark:text-white">
-            CHATINN
-          </h1>
+          <h1 className="text-2xl font-bold text-black dark:text-white">CHATINN</h1>
           <div className="flex items-center gap-2">
             <button
               className="flex items-center gap-2 cursor-pointer px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -39,4 +37,3 @@ export default function Header() {
     </header>
   );
 }
-

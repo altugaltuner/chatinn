@@ -35,7 +35,7 @@ const getMockMessages = (chatId: string): Message[] => {
       { id: "2", text: "Olur, görüşürüz 👋", sender: "other", time: "Dün" },
     ],
   };
-  
+
   return messages[chatId] || [];
 };
 
@@ -60,7 +60,10 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
         id: Date.now().toString(),
         text: newMessage,
         sender: "me",
-        time: new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }),
+        time: new Date().toLocaleTimeString("tr-TR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
       setMessages([...messages, message]);
       setNewMessage("");
@@ -130,4 +133,3 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
     </div>
   );
 }
-

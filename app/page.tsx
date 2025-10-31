@@ -4,7 +4,7 @@ import Header from "@/components/shared/Header";
 
 export default function Home() {
   const users = getUsers();
-  console.log(users,"users");
+  console.log(users, "users");
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       <Header />

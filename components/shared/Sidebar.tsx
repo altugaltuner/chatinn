@@ -21,18 +21,11 @@ export default function Sidebar() {
         <Link
           href="/chats"
           className={`flex items-center justify-center py-3 transition-colors relative group ${
-            isActive("/chats")
-              ? "text-white"
-              : "text-gray-400 hover:text-white"
+            isActive("/chats") ? "text-white" : "text-gray-400 hover:text-white"
           }`}
           title="Sohbetler"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -40,27 +33,18 @@ export default function Sidebar() {
               d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
             />
           </svg>
-          {isActive("/chats") && (
-            <div className="absolute left-0 w-1 h-10 bg-white rounded-r-lg" />
-          )}
+          {isActive("/chats") && <div className="absolute left-0 w-1 h-10 bg-white rounded-r-lg" />}
         </Link>
 
         {/* Arkadaşlarım */}
         <Link
           href={`/myfriends/${user?.id}`}
           className={`flex items-center justify-center py-3 transition-colors relative group ${
-            isActive("/status")
-              ? "text-white"
-              : "text-gray-400 hover:text-white"
+            isActive("/status") ? "text-white" : "text-gray-400 hover:text-white"
           }`}
           title="Arkadaşlarım"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -77,18 +61,11 @@ export default function Sidebar() {
         <Link
           href="/channels"
           className={`flex items-center justify-center py-3 transition-colors relative group ${
-            isActive("/channels")
-              ? "text-white"
-              : "text-gray-400 hover:text-white"
+            isActive("/channels") ? "text-white" : "text-gray-400 hover:text-white"
           }`}
           title="Kanallar"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -105,18 +82,11 @@ export default function Sidebar() {
         <Link
           href="/groups"
           className={`flex items-center justify-center py-3 transition-colors relative group ${
-            isActive("/groups")
-              ? "text-white"
-              : "text-gray-400 hover:text-white"
+            isActive("/groups") ? "text-white" : "text-gray-400 hover:text-white"
           }`}
           title="Gruplar"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -136,18 +106,11 @@ export default function Sidebar() {
         <Link
           href="/settings"
           className={`flex items-center justify-center py-3 transition-colors relative group ${
-            isActive("/settings")
-              ? "text-white"
-              : "text-gray-400 hover:text-white"
+            isActive("/settings") ? "text-white" : "text-gray-400 hover:text-white"
           }`}
           title="Ayarlar"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -182,7 +145,7 @@ export default function Sidebar() {
             />
           </Link>
         )}
-        
+
         {/* Eğer kullanıcı giriş yapmamışsa placeholder */}
         {!user && (
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-700 bg-gray-800 flex items-center justify-center">
@@ -205,4 +168,3 @@ export default function Sidebar() {
     </div>
   );
 }
-

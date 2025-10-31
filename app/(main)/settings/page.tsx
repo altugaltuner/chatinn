@@ -28,9 +28,7 @@ export default function SettingsPage() {
       <div className="max-w-4xl mx-auto p-8">
         {/* Başlık */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Ayarlar
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Ayarlar</h1>
           <p className="text-gray-500 dark:text-gray-400">
             Hesap ayarlarınızı ve tercihlerinizi yönetin
           </p>
@@ -39,12 +37,7 @@ export default function SettingsPage() {
         {/* Profil Bilgileri */}
         <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 mb-6 border border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -66,25 +59,16 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {user.name}
-              </p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">{user.name}</p>
               <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
               {user.username && (
-                <p className="text-sm text-gray-400 dark:text-gray-500">
-                  @{user.username}
-                </p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">@{user.username}</p>
               )}
             </div>
           </div>
 
           <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2">
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -99,12 +83,7 @@ export default function SettingsPage() {
         {/* Hesap Ayarları */}
         <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 mb-6 border border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -124,9 +103,7 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">
-                  Bildirimler
-                </p>
+                <p className="font-medium text-gray-900 dark:text-white">Bildirimler</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Masaüstü ve mobil bildirimler
                 </p>
@@ -139,12 +116,8 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">
-                  Karanlık Mod
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Tema tercihini ayarla
-                </p>
+                <p className="font-medium text-gray-900 dark:text-white">Karanlık Mod</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Tema tercihini ayarla</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" className="sr-only peer" />
@@ -154,9 +127,7 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">
-                  Çevrimiçi Durum
-                </p>
+                <p className="font-medium text-gray-900 dark:text-white">Çevrimiçi Durum</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Çevrimiçi durumunu göster
                 </p>
@@ -172,12 +143,7 @@ export default function SettingsPage() {
         {/* Gizlilik ve Güvenlik */}
         <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 mb-6 border border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -190,9 +156,7 @@ export default function SettingsPage() {
 
           <div className="space-y-3">
             <button className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
-              <span className="text-gray-900 dark:text-white">
-                Şifremi Değiştir
-              </span>
+              <span className="text-gray-900 dark:text-white">Şifremi Değiştir</span>
               <svg
                 className="w-5 h-5 text-gray-400"
                 fill="none"
@@ -209,9 +173,7 @@ export default function SettingsPage() {
             </button>
 
             <button className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
-              <span className="text-gray-900 dark:text-white">
-                Gizlilik Ayarları
-              </span>
+              <span className="text-gray-900 dark:text-white">Gizlilik Ayarları</span>
               <svg
                 className="w-5 h-5 text-gray-400"
                 fill="none"
@@ -228,9 +190,7 @@ export default function SettingsPage() {
             </button>
 
             <button className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
-              <span className="text-gray-900 dark:text-white">
-                Engellenmiş Kullanıcılar
-              </span>
+              <span className="text-gray-900 dark:text-white">Engellenmiş Kullanıcılar</span>
               <svg
                 className="w-5 h-5 text-gray-400"
                 fill="none"
@@ -251,12 +211,7 @@ export default function SettingsPage() {
         {/* Çıkış Yap */}
         <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-6 border border-red-200 dark:border-red-800">
           <h2 className="text-xl font-semibold text-red-900 dark:text-red-400 mb-4 flex items-center gap-2">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -273,12 +228,7 @@ export default function SettingsPage() {
             onClick={handleLogout}
             className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold flex items-center gap-2"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -293,4 +243,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

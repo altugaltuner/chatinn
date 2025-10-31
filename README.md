@@ -218,3 +218,6 @@ Sonra `.env` dosyasındaki `PG_PASSWORD` değerini güncelleyin.
 
 Bu proje MIT lisansı altında lisanslanmıştır.
 
+
+
+// npx prettier --write "**/*.{ts,tsx,js,jsx}"

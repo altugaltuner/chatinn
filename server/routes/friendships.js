@@ -1,24 +1,24 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const db = require('../db');
+const db = require("../db");
 
 // Arkadaşlık isteği gönder
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   const { user_id, friend_id, status } = req.body;
 
   // Validasyon
   if (!user_id || !friend_id) {
-    return res.status(400).json({ 
-      error: 'user_id ve friend_id gereklidir',
-      message: 'Geçersiz istek' 
+    return res.status(400).json({
+      error: "user_id ve friend_id gereklidir",
+      message: "Geçersiz istek",
     });
   }
 
   // Kendine istek göndermeyi engelle
   if (user_id === friend_id) {
-    return res.status(400).json({ 
-      error: 'Kendinize arkadaşlık isteği gönderemezsiniz',
-      message: 'Geçersiz işlem' 
+    return res.status(400).json({
+      error: "Kendinize arkadaşlık isteği gönderemezsiniz",
+      message: "Geçersiz işlem",
     });
   }
 
@@ -29,13 +29,13 @@ router.post('/', async (req, res) => {
       WHERE (user_id = $1 AND friend_id = $2) 
          OR (user_id = $2 AND friend_id = $1)
     `;
-    
+
     const existingFriendship = await db.query(checkQuery, [user_id, friend_id]);
 
     if (existingFriendship.rows && existingFriendship.rows.length > 0) {
-      return res.status(400).json({ 
-        error: 'Zaten bir arkadaşlık isteği mevcut',
-        message: 'Bu kullanıcıya zaten istek gönderilmiş' 
+      return res.status(400).json({
+        error: "Zaten bir arkadaşlık isteği mevcut",
+        message: "Bu kullanıcıya zaten istek gönderilmiş",
       });
     }
 
@@ -45,24 +45,23 @@ router.post('/', async (req, res) => {
       VALUES ($1, $2, $3, NOW())
     `;
 
-    await db.query(insertQuery, [user_id, friend_id, status || 'pending']);
+    await db.query(insertQuery, [user_id, friend_id, status || "pending"]);
 
-    res.status(201).json({ 
-      message: 'Arkadaşlık isteği başarıyla gönderildi',
-      success: true 
+    res.status(201).json({
+      message: "Arkadaşlık isteği başarıyla gönderildi",
+      success: true,
     });
-
   } catch (error) {
-    console.error('Arkadaşlık isteği hatası:', error);
-    res.status(500).json({ 
-      error: 'Sunucu hatası',
-      message: 'Arkadaşlık isteği gönderilemedi' 
+    console.error("Arkadaşlık isteği hatası:", error);
+    res.status(500).json({
+      error: "Sunucu hatası",
+      message: "Arkadaşlık isteği gönderilemedi",
     });
   }
 });
 
 // Tüm arkadaşlık isteklerini getir
-router.get('/all', async (req, res) => {
+router.get("/all", async (req, res) => {
   try {
     const query = `
       SELECT 
@@ -79,15 +78,15 @@ router.get('/all', async (req, res) => {
     const result = await db.query(query);
     res.json(result.rows);
   } catch (error) {
-    console.error('Tüm arkadaşlıkları getirme hatası:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    console.error("Tüm arkadaşlıkları getirme hatası:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 
 // Belirli iki kullanıcı arasındaki arkadaşlık durumunu kontrol et
-router.get('/status/:user_id/:friend_id', async (req, res) => {
+router.get("/status/:user_id/:friend_id", async (req, res) => {
   const { user_id, friend_id } = req.params; // ✅ Burayı ekledim!
-  
+
   try {
     const query = `
       SELECT * FROM friendships 
@@ -95,22 +94,22 @@ router.get('/status/:user_id/:friend_id', async (req, res) => {
          OR (user_id = $2 AND friend_id = $1)
     `;
     const result = await db.query(query, [user_id, friend_id]);
-    
+
     if (result.rows.length > 0) {
       res.json(result.rows[0]); // Tek bir sonuç dön
     } else {
-      res.json({ status: 'none' }); // Arkadaşlık yok
+      res.json({ status: "none" }); // Arkadaşlık yok
     }
   } catch (error) {
-    console.error('Arkadaşlık durumu kontrol hatası:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    console.error("Arkadaşlık durumu kontrol hatası:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 
 // Belirli bir kullanıcının tüm arkadaşlık isteklerini getir (gelen istekler)
-router.get('/requests/:userId', async (req, res) => {
+router.get("/requests/:userId", async (req, res) => {
   const { userId } = req.params;
-  
+
   try {
     const query = `
       SELECT 
@@ -126,18 +125,18 @@ router.get('/requests/:userId', async (req, res) => {
       ORDER BY f.created_at DESC
     `;
     const result = await db.query(query, [userId]);
-    console.log('📤 Backend - Gönderilen requests:', JSON.stringify(result.rows, null, 2)); // Debug
+    console.log("📤 Backend - Gönderilen requests:", JSON.stringify(result.rows, null, 2)); // Debug
     res.json(result.rows);
   } catch (error) {
-    console.error('Arkadaşlık isteklerini getirme hatası:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    console.error("Arkadaşlık isteklerini getirme hatası:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 
 // Belirli bir kullanıcının arkadaşlarını listele
-router.get('/friends/:userId', async (req, res) => {
+router.get("/friends/:userId", async (req, res) => {
   const { userId } = req.params;
-  
+
   try {
     const query = `
       SELECT 
@@ -157,20 +156,20 @@ router.get('/friends/:userId', async (req, res) => {
     const result = await db.query(query, [userId]);
     res.json(result.rows);
   } catch (error) {
-    console.error('Arkadaşları getirme hatası:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    console.error("Arkadaşları getirme hatası:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 
 // Arkadaşlık isteğini kabul et veya reddet
-router.put('/:friendshipId', async (req, res) => {
+router.put("/:friendshipId", async (req, res) => {
   const { friendshipId } = req.params;
   const { status } = req.body; // 'accepted' veya 'rejected'
 
-  if (!['accepted', 'rejected'].includes(status)) {
-    return res.status(400).json({ 
-      error: 'Geçersiz durum',
-      message: 'Status accepted veya rejected olmalıdır' 
+  if (!["accepted", "rejected"].includes(status)) {
+    return res.status(400).json({
+      error: "Geçersiz durum",
+      message: "Status accepted veya rejected olmalıdır",
     });
   }
 
@@ -182,18 +181,18 @@ router.put('/:friendshipId', async (req, res) => {
     `;
     await db.query(updateQuery, [status, friendshipId]);
 
-    res.json({ 
-      message: `Arkadaşlık isteği ${status === 'accepted' ? 'kabul edildi' : 'reddedildi'}`,
-      success: true 
+    res.json({
+      message: `Arkadaşlık isteği ${status === "accepted" ? "kabul edildi" : "reddedildi"}`,
+      success: true,
     });
   } catch (error) {
-    console.error('Arkadaşlık durumu güncelleme hatası:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    console.error("Arkadaşlık durumu güncelleme hatası:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 
 // Belirli bir kullanıcının arkadaşlarını listele (sadece onaylananlar)
-router.get('/myfriends/:userId', async (req, res) => {
+router.get("/myfriends/:userId", async (req, res) => {
   const { userId } = req.params;
   try {
     const query = `
@@ -213,15 +212,14 @@ router.get('/myfriends/:userId', async (req, res) => {
     `;
     const result = await db.query(query, [userId]);
     res.json(result.rows);
-  }
-  catch (error) {
-    console.error('Arkadaşları getirme hatası:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+  } catch (error) {
+    console.error("Arkadaşları getirme hatası:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 
 // Arkadaşlık isteğini kabul et (user_id ve friend_id ile)
-router.put('/accept/:userId/:friendId', async (req, res) => {
+router.put("/accept/:userId/:friendId", async (req, res) => {
   const { userId, friendId } = req.params;
   try {
     const updateQuery = `
@@ -229,16 +227,16 @@ router.put('/accept/:userId/:friendId', async (req, res) => {
       SET status = $1 
       WHERE user_id = $2 AND friend_id = $3
     `;
-    await db.query(updateQuery, ['accepted', userId, friendId]);
-    res.json({ message: 'Arkadaşlık isteği kabul edildi', success: true });
+    await db.query(updateQuery, ["accepted", userId, friendId]);
+    res.json({ message: "Arkadaşlık isteği kabul edildi", success: true });
   } catch (error) {
-    console.error('Arkadaşlık isteği kabul edilemedi:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    console.error("Arkadaşlık isteği kabul edilemedi:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 
 // Arkadaşlık isteğini reddet (user_id ve friend_id ile)
-router.put('/reject/:userId/:friendId', async (req, res) => {
+router.put("/reject/:userId/:friendId", async (req, res) => {
   const { userId, friendId } = req.params;
   try {
     const updateQuery = `
@@ -247,14 +245,12 @@ router.put('/reject/:userId/:friendId', async (req, res) => {
       WHERE user_id = $2 AND friend_id = $3
     `;
 
-    await db.query(updateQuery, ['rejected', userId, friendId]);
-    res.json({ message: 'Arkadaşlık isteği reddedildi', success: true });
+    await db.query(updateQuery, ["rejected", userId, friendId]);
+    res.json({ message: "Arkadaşlık isteği reddedildi", success: true });
   } catch (error) {
-    console.error('Arkadaşlık isteği reddedilemedi:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    console.error("Arkadaşlık isteği reddedilemedi:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 
-
 module.exports = router;
-

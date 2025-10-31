@@ -1,4 +1,4 @@
-const { Pool } = require('pg');
+const { Pool } = require("pg");
 
 // .env zaten index.js'de yüklendi, burada tekrar yüklemeye gerek yok
 

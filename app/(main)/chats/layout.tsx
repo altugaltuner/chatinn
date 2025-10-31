@@ -1,10 +1,6 @@
 import ChatList from "@/components/chat/ChatList";
 
-export default function ChatsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ChatsLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="h-screen flex">
       {/* Sol taraf - Sohbet listesi (sadece desktop) */}
@@ -13,10 +9,7 @@ export default function ChatsLayout({
       </div>
 
       {/* Sağ taraf - Dinamik içerik */}
-      <div className="flex-1">
-        {children}
-      </div>
+      <div className="flex-1">{children}</div>
     </div>
   );
 }
-

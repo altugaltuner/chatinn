@@ -33,7 +33,7 @@ export default function ChatList() {
       <div className="overflow-y-auto">
         {mockChats.map((chat) => {
           const isActive = pathname === `/chats/${chat.id}`;
-          
+
           return (
             <Link
               key={chat.id}
@@ -71,4 +71,3 @@ export default function ChatList() {
     </div>
   );
 }
-
