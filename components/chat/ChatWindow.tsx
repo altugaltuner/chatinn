@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { joinRoom, sendMessage, onMessage, offMessage } from "@/lib/socket";
+import { createDMRoomId } from "@/lib/roomUtils";
 
 interface Message {
   id: string;
@@ -9,64 +11,149 @@ interface Message {
   time: string;
 }
 
-interface ChatWindowProps {
-  chatId: string;
-  chatName: string;
-}
-
-// Mock mesajlar
-const getMockMessages = (chatId: string): Message[] => {
-  const messages: Record<string, Message[]> = {
-    "1": [
-      { id: "1", text: "Merhaba! Nasılsın?", sender: "other", time: "10:25" },
-      { id: "2", text: "İyiyim teşekkürler, sen nasılsın?", sender: "me", time: "10:26" },
-      { id: "3", text: "Ben de iyiyim, çok teşekkürler", sender: "other", time: "10:30" },
-    ],
-    "2": [
-      { id: "1", text: "Toplantı saat kaçta?", sender: "other", time: "09:15" },
-      { id: "2", text: "Saat 14:00'te başlayacak", sender: "me", time: "09:20" },
-    ],
-    "3": [
-      { id: "1", text: "Dosyaları gönderdim", sender: "me", time: "Dün" },
-      { id: "2", text: "Teşekkürler!", sender: "other", time: "Dün" },
-    ],
-    "4": [
-      { id: "1", text: "Yarın görüşelim mi?", sender: "me", time: "Dün" },
-      { id: "2", text: "Olur, görüşürüz 👋", sender: "other", time: "Dün" },
-    ],
-  };
-
-  return messages[chatId] || [];
-};
-
 const getChatName = (chatId: string): string => {
   const names: Record<string, string> = {
     "1": "Ahmet Yılmaz",
     "2": "Ayşe Demir",
     "3": "Mehmet Kaya",
     "4": "Zeynep Şahin",
+    "5": "Nere altı",
   };
   return names[chatId] || "Bilinmeyen";
 };
 
 export default function ChatWindow({ chatId }: { chatId: string }) {
-  const [messages, setMessages] = useState<Message[]>(getMockMessages(chatId));
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
   const chatName = getChatName(chatId);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Mevcut kullanıcının ID'sini al (localStorage'dan)
+  const getCurrentUserId = (): number => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      return user.id || 0;
+    }
+    return 0;
+  };
+
+  // ChatId'yi roomId formatına çevir (eğer sayıysa)
+  const getRoomId = (): string => {
+    // Eğer chatId zaten dm_ ile başlıyorsa olduğu gibi kullan
+    if (chatId.startsWith('dm_')) {
+      return chatId;
+    }
+
+    // Değilse formatlama yaparız. `dm_${minId}_${maxId}` createDMRoomId sayesinde
+    const currentUserId = getCurrentUserId();
+    const receiverUserId = parseInt(chatId);
+    return createDMRoomId(currentUserId, receiverUserId);
+  };
+
+  // Eski mesajları veritabanından yükle
+  useEffect(() => {
+    const loadMessages = async () => {
+      setLoading(true);
+      try {
+        const roomId = getRoomId();
+        console.log('🔍 Mesajlar yükleniyor, roomId:', roomId);
+        const response = await fetch(`http://localhost:3001/api/messages/${roomId}`);
+        const data = await response.json();
+
+        if (data.success) {
+          const loadedMessages: Message[] = data.messages.map((msg: any) => ({
+            id: msg.id.toString(),
+            text: msg.message,
+            sender: msg.sender_id === getCurrentUserId() ? "me" : "other",
+            time: new Date(msg.created_at).toLocaleTimeString("tr-TR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          }));
+          setMessages(loadedMessages);
+        }
+      } catch (err) {
+        console.error('Mesajlar yüklenirken hata:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMessages();
+  }, [chatId]);
+
+  // Socket.IO bağlantısını kur
+  useEffect(() => {
+    const roomId = getRoomId();
+    console.log('🔌 Socket odasına katılınıyor, roomId:', roomId);
+
+    // Chat odasına katıl
+    joinRoom(roomId);
+
+    // Yeni mesajları dinle
+    onMessage((data: any) => {
+      console.log('📨 Yeni mesaj alındı:', data);
+
+      // Duplikasyonu önle - eğer mesaj zaten listede varsa ekleme
+      setMessages((prev) => {
+        const exists = prev.some(msg => msg.id === data.id?.toString());
+        if (exists) return prev;
+
+        const newMsg: Message = {
+          id: data.id?.toString() || Date.now().toString(),
+          text: data.message,
+          sender: data.senderId === getCurrentUserId() ? "me" : "other",
+          time: new Date(data.created_at || Date.now()).toLocaleTimeString("tr-TR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+        return [...prev, newMsg];
+      });
+    });
+
+    // Cleanup - component unmount olduğunda
+    return () => {
+      offMessage();
+    };
+  }, [chatId]);
+
+  // Mesajlar güncellendiğinde scroll'u en alta kaydır
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSend = () => {
     if (newMessage.trim()) {
-      const message: Message = {
-        id: Date.now().toString(),
-        text: newMessage,
-        sender: "me",
-        time: new Date().toLocaleTimeString("tr-TR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-      setMessages([...messages, message]);
-      setNewMessage("");
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+
+      if (user) {
+        const roomId = getRoomId();
+
+        // Socket.IO ile mesaj gönder
+        sendMessage({
+          roomId: roomId,
+          message: newMessage,
+          senderId: user.id,
+          senderName: user.name,
+        });
+
+        // UI'da göster
+        const message: Message = {
+          id: Date.now().toString(),
+          text: newMessage,
+          sender: "me",
+          time: new Date().toLocaleTimeString("tr-TR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+        setMessages([...messages, message]);
+        setNewMessage("");
+      }
     }
   };
 
@@ -86,29 +173,39 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
-          >
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500 dark:text-gray-400">Mesajlar yükleniyor...</p>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500 dark:text-gray-400">Henüz mesaj yok. İlk mesajı gönderin!</p>
+          </div>
+        ) : (
+          messages.map((message) => (
             <div
-              className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                message.sender === "me"
+              key={message.id}
+              className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[70%] rounded-lg px-4 py-2 ${message.sender === "me"
                   ? "bg-blue-500 text-white"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-              }`}
-            >
-              <p className="text-sm">{message.text}</p>
-              <span
-                className={`text-xs mt-1 block ${
-                  message.sender === "me" ? "text-blue-100" : "text-gray-500 dark:text-gray-400"
-                }`}
+                  }`}
               >
-                {message.time}
-              </span>
+                <p className="text-sm">{message.text}</p>
+                <span
+                  className={`text-xs mt-1 block ${message.sender === "me" ? "text-blue-100" : "text-gray-500 dark:text-gray-400"
+                    }`}
+                >
+                  {message.time}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
+        {/* Scroll anchor */}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}

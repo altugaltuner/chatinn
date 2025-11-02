@@ -14,6 +14,8 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "shadcn": "^3.4.2",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "zod": "^4.1.12",
     "zustand": "^5.0.8"
   },
