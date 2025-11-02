@@ -43,7 +43,7 @@ export const getSocket = (): Socket => {
 // Bir odaya katıl
 export const joinRoom = (roomId: string) => {
   const activeSocket = getSocket();
-  activeSocket.emit('join_room', roomId);
+  activeSocket.emit('join_room', roomId); // Server'a join_room eventi gönder
   console.log(`📥 ${roomId} odasına katılındı`);
 };
 
@@ -55,7 +55,7 @@ export const sendMessage = (data: {
   senderName: string;
 }) => {
   const activeSocket = getSocket();
-  activeSocket.emit('send_message', data);
+  activeSocket.emit('send_message', data); // Server'a send_message eventi gönder
   console.log('📤 Mesaj gönderildi:', data);
 };
 

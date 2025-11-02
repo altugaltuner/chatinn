@@ -115,8 +115,14 @@ router.get('/conversations/:userId', async (req, res) => {
     }
 
     // Kullanıcının mesajlaştığı kişileri ve son mesajları getir
+
+    // JavaScript ile yazarsak:
+    // const other_user_id = (message.sender_id === currentUserId) 
+    // ? message.receiver_id  // Sen gönderdiysen → alıcı karşı taraf
+    // : message.sender_id;   // Sana gönderdiyse → gönderen karşı taraf
     const result = await db.query(
-      `SELECT DISTINCT ON (other_user_id) -- Her kişiye ait son mesajı al (çakışan mesajları birleştir)
+      `SELECT DISTINCT ON (other_user_id) 
+      -- Her kişiye ait son mesajı al (çakışan mesajları birleştir)
         CASE 
           WHEN m.sender_id = $1 THEN m.receiver_id  -- Eğer sen gönderdiysen -> alıcıyı al
           ELSE m.sender_id  -- Eğer sen alıcı değilsen -> göndericiyı al
@@ -125,10 +131,12 @@ router.get('/conversations/:userId', async (req, res) => {
         u.picture,
         m.message as last_message,
         m.created_at as last_message_time,
-        (SELECT COUNT(*) --Karşı tarafın sana gönderdiği ve henüz okumadığın mesaj sayısı.
+        (SELECT COUNT(*) 
+        --Karşı tarafın sana gönderdiği ve henüz okumadığın mesaj sayısı.
 
          FROM messages 
-         WHERE receiver_id = $1  --Sadece senin dahil olduğun mesajları getir (gönderdiğin VEYA aldığın).
+         WHERE receiver_id = $1  
+         --Sadece senin dahil olduğun mesajları getir (gönderdiğin VEYA aldığın).
 
          AND sender_id = CASE WHEN m.sender_id = $1 THEN m.receiver_id ELSE m.sender_id END
          AND is_read = false) as unread_count

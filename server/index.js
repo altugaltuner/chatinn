@@ -37,8 +37,8 @@ io.on('connection', (socket) => {
   console.log('✅ Yeni kullanıcı bağlandı:', socket.id);
 
   // Kullanıcı bir odaya katılırken
-  socket.on('join_room', (roomId) => {
-    socket.join(roomId);
+  socket.on('join_room', (roomId) => { // Server'a join_room eventi geldiğinde
+    socket.join(roomId); // Kullanıcıyı "roomId" ile belirtilen odaya join et (socket.io'da join kullanılır)
     console.log(`👤 ${socket.id} kullanıcısı ${roomId} odasına katıldı`);
   });
 
@@ -75,6 +75,9 @@ io.on('connection', (socket) => {
       };
 
       // Mesajı ilgili odaya gönder
+      // Backend: Sadece o odaya mesaj gönder
+      // io.to('dm_2_5').emit('receive_message', data);
+      // Sadece 'dm_2_5' odasındakiler bu mesajı alır!
       io.to(roomId).emit('receive_message', savedMessage);
     } catch (err) {
       console.error('❌ Mesaj kaydetme hatası:', err);
