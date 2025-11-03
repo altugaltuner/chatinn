@@ -78,7 +78,8 @@ io.on('connection', (socket) => {
       // Backend: Sadece o odaya mesaj gönder
       // io.to('dm_2_5').emit('receive_message', data);
       // Sadece 'dm_2_5' odasındakiler bu mesajı alır!
-      io.to(roomId).emit('receive_message', savedMessage);
+      io.to(roomId).emit('receive_message', savedMessage); // receive_message eventi gönderiliyor. Bu sayede chatwindowdaki callback çalıştırılacak. 
+      // savedMessage data'sı gönderiliyor, chatwindowdaki data = savedMessage olacak.
     } catch (err) {
       console.error('❌ Mesaj kaydetme hatası:', err);
       // Hata olsa bile mesajı socket üzerinden gönder

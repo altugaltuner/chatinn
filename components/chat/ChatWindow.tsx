@@ -92,7 +92,7 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
     // Chat odasına katıl
     joinRoom(roomId);
 
-    // Yeni mesajları dinle
+    // burada zaten useeffect çalıştıgı zaman onMessage tanımlanmıştı. 
     onMessage((data: any) => {
       console.log('📨 Yeni mesaj alındı:', data);
 

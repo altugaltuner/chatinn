@@ -65,10 +65,11 @@ export const sendTyping = (data: { roomId: string; userName: string }) => {
   activeSocket.emit('typing', data);
 };
 
-// Mesaj dinle
+// Mesaj dinle. onmessage tanımlandı. callback fonksiyonu çağrılmadı. callback() yazmadık direk 
+// tanım olarak verdik.
 export const onMessage = (callback: (data: any) => void) => {
   const activeSocket = getSocket();
-  activeSocket.on('receive_message', callback);
+  activeSocket.on('receive_message', callback); // receive_message eventi dinleniyor. callback fonksiyonu eğer receive_message eventi gelirse çalışır.
 };
 
 // Yazıyor bildirimini dinle
