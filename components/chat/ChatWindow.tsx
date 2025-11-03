@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { joinRoom, sendMessage, onMessage, offMessage } from "@/lib/socket";
 import { createDMRoomId } from "@/lib/roomUtils";
+import { getCurrentUserId,getChats } from "@/lib/getChats";
 
 interface Message {
   id: string;
@@ -11,33 +12,41 @@ interface Message {
   time: string;
 }
 
-const getChatName = (chatId: string): string => {
-  const names: Record<string, string> = {
-    "1": "Ahmet Yılmaz",
-    "2": "Ayşe Demir",
-    "3": "Mehmet Kaya",
-    "4": "Zeynep Şahin",
-    "5": "Nere altı",
-  };
-  return names[chatId] || "Bilinmeyen";
-};
+interface ChatTitles{
+  id: string;
+  name: string;
+}
+
 
 export default function ChatWindow({ chatId }: { chatId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const chatName = getChatName(chatId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Mevcut kullanıcının ID'sini al (localStorage'dan)
-  const getCurrentUserId = (): number => {
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      return user.id || 0;
-    }
-    return 0;
-  };
+  const [chatTitles, setChatTitles] = useState<ChatTitles[]>([]);
+  const chatTitle = chatTitles.find(chat => chat.id === chatId)?.name;
+
+  // Konuşmaları yükle
+  useEffect(() => {
+    const loadConversations = async () => {
+      setLoading(true);
+      try {
+        const userId = getCurrentUserId();
+        const conversations = await getChats(userId);
+        setChatTitles(conversations);
+      } catch (err) {
+        console.error('Konuşmalar yüklenirken hata:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadConversations();
+  }, []);
+
+
+
 
   // ChatId'yi roomId formatına çevir (eğer sayıysa)
   const getRoomId = (): string => {
@@ -141,17 +150,7 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
           senderName: user.name,
         });
 
-        // UI'da göster
-        const message: Message = {
-          id: Date.now().toString(),
-          text: newMessage,
-          sender: "me",
-          time: new Date().toLocaleTimeString("tr-TR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        };
-        setMessages([...messages, message]);
+        // Input'u temizle - mesaj socket response'undan gelecek
         setNewMessage("");
       }
     }
@@ -168,7 +167,7 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
     <div className="flex flex-col h-full bg-white dark:bg-gray-800">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{chatName}</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{chatTitle}</h2>
       </div>
 
       {/* Messages */}
