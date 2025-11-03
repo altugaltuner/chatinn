@@ -49,4 +49,16 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { bio } = req.body;
+    await db.query("UPDATE users SET bio = $1 WHERE id = $2 RETURNING *", [bio, id]);
+    res.json({ success: true, message: "Bio başarıyla güncellendi" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Hakkında kaydedilirken hata" });
+  }
+});
+
 module.exports = router;

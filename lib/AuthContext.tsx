@@ -8,6 +8,7 @@ interface User {
   email: string;
   picture?: string;
   username?: string;
+  bio?: string;
 }
 
 interface AuthContextType {

@@ -3,17 +3,78 @@
 import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default function SettingsPage() {
-  const { user, logout } = useAuth();
+  const { user: currentUser, logout } = useAuth();
   const router = useRouter();
+  const [isEditingAbout, setIsEditingAbout] = useState(false);
+  const [aboutText, setAboutText] = useState("");
+  const [bio, setBio] = useState<string>("");
 
   const handleLogout = () => {
     logout();
     router.push("/signin");
   };
 
-  if (!user) {
+  const loadBioDB = async (userId: number) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/user/${userId}`);
+      const data = await response.json();
+      console.log("user bio data:", data);
+      const userBio = data.bio || "";
+      setBio(userBio);
+      setAboutText(userBio);
+    } catch (error) {
+      console.error("Bio yüklenirken hata:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      loadBioDB(currentUser.id);
+    }
+  }, [currentUser?.id]);
+
+  const saveBioDB = async () => {
+    if (!currentUser?.id) return;
+    
+    try {
+      const response = await fetch(`http://localhost:3001/api/user/${currentUser.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ bio: aboutText }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        console.log("Hakkında kaydedildi:", data);
+        setBio(aboutText);
+      }
+    } catch (err) {
+      console.error('Hakkında kaydedilirken hata:', err);
+    }
+    finally {
+      if (currentUser?.id) {
+        loadBioDB(currentUser.id);
+      }
+    }
+  };
+
+  const handleSaveAbout = async () => {
+    await saveBioDB();
+    console.log("Hakkında kaydedildi:", aboutText);
+    setIsEditingAbout(false);
+  };
+
+  const handleCancelAbout = () => {
+    setAboutText(bio || "");
+    setIsEditingAbout(false);
+  };
+
+  if (!currentUser) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -34,50 +95,103 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        {/* Profil Bilgileri */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 mb-6 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-            Profil Bilgileri
-          </h2>
+        {/* Profil Bilgileri ve Hakkında */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Sol: Profil Bilgileri */}
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              Profil Bilgileri
+            </h2>
 
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white dark:border-gray-700">
-              <Image
-                src={user.picture || "/defaultpp.jpg"}
-                alt={user.name}
-                width={80}
-                height={80}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">{user.name}</p>
-              <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
-              {user.username && (
-                <p className="text-sm text-gray-400 dark:text-gray-500">@{user.username}</p>
-              )}
+            <div className="flex flex-col items-center text-center">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-700 mb-4">
+                <Image
+                  src={currentUser.picture || "/defaultpp.jpg"}
+                  alt={currentUser.name}
+                  width={128}
+                  height={128}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white mb-1">{currentUser.name}</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-1">{currentUser.email}</p>
+                {currentUser.username && (
+                  <p className="text-sm text-gray-400 dark:text-gray-500">@{currentUser.username}</p>
+                )}
+              </div>
             </div>
           </div>
 
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-              />
-            </svg>
-            Profili Düzenle
-          </button>
+          {/* Sağ: Hakkında */}
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Hakkında
+              </h2>
+              {!isEditingAbout && (
+                <button
+                  onClick={() => setIsEditingAbout(true)}
+                  className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="Düzenle"
+                >
+                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {isEditingAbout ? (
+              <div className="space-y-3">
+                <textarea
+                  value={aboutText}
+                  onChange={(e) => setAboutText(e.target.value)}
+                  className="w-full h-32 px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Kendiniz hakkında bir şeyler yazın..."
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveAbout}
+                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                  >
+                    Kaydet
+                  </button>
+                  <button
+                    onClick={handleCancelAbout}
+                    className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors font-medium"
+                  >
+                    İptal
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                {aboutText}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Hesap Ayarları */}
