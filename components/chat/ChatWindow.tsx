@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { joinRoom, sendMessage, onMessage, offMessage } from "@/lib/socket";
 import { createDMRoomId } from "@/lib/roomUtils";
 import { getCurrentUserId,getChats } from "@/lib/getChats";
+import { ClipboardIcon } from "lucide-react";
 
 interface Message {
   id: string;
@@ -45,7 +46,46 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
     loadConversations();
   }, []);
 
+  const getCopy = async () => {
+    const roomId = getRoomId();
+    if (!roomId) return;
+    
+    try {
+      const response = await fetch(`http://localhost:3001/api/messages/${roomId}/download`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
 
+      if (data.success) {
+        console.log("Mesajlar indirildi:", data);
+        // Blob = Binary Large Object (dosya verisi)
+        const blob = new Blob([data.messages], { type: "text/plain; charset=utf-8" });
+       //5. Geçici URL oluşturuluyor:
+       //Örn: "blob:http://localhost:3000/a1b2c3d4-e5f6-..."
+        const url = URL.createObjectURL(blob);
+        //6. Sanal bir <a> elementi oluşturuluyor:
+        //<a href="blob:http://localhost:3000/a1b2c3d4-e5f6-..." download="mesajlar.txt">Mesajları İndir</a>
+        const a = document.createElement("a");
+        a.href = url;
+        //7. Dosya adı oluşturuluyor:
+        const fileName = chatTitle ? `${chatTitle}_mesajlar.txt` : `${roomId}_mesajlar.txt`;
+        //8. Dosya indirme linki tıklanıyor:
+        //<a href="blob:http://localhost:3000/a1b2c3d4-e5f6-..." download="mesajlar.txt">Mesajları İndir</a>
+        a.download = fileName;
+        a.click(); // Sanki kullanıcı tıkladı gibi dosya indiriliyor        a.click();
+        //10. Geçici URL siliniyor:
+        //Örn: "blob:http://localhost:3000/a1b2c3d4-e5f6-..."
+        URL.revokeObjectURL(url); // Bellek temizliği
+      } else {
+        console.error('Mesajlar indirilemedi:', data.error);
+      }
+    } catch (err) {
+      console.error('Mesajlar indirilirken hata:', err);
+    }
+  };
 
 
   // ChatId'yi roomId formatına çevir (eğer sayıysa)
@@ -168,6 +208,8 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">{chatTitle}</h2>
+        <button onClick={() => getCopy()}>Mesajları İndir <ClipboardIcon className="w-4 h-4" /> </button>
+      
       </div>
 
       {/* Messages */}

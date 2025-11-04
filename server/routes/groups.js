@@ -56,23 +56,23 @@ router.post("/", async (req, res) => {
 });
 
 // Grupa katılım isteği gönder
-router.post("/:group_id/join", async (req,res) => {
+router.post("/:group_id/join", async (req, res) => {
   const { group_id } = req.params; // URL'den grup id'sini al
   const { user_id } = req.body;
-  console.log(req.body,"req.body");
-  
+  console.log(req.body, "req.body");
+
   console.log("Katılım isteği - user_id:", user_id, "group_id:", group_id);
-  
-    // Check if the user is already in the group
-    const checkQuery = `
+
+  // Check if the user is already in the group
+  const checkQuery = `
       SELECT 1 FROM chat_members WHERE user_id = $1 AND chat_group_id = $2
     `;
-    const checkResult = await db.query(checkQuery, [user_id, group_id]);
-    if (checkResult.rowCount > 0) {
-      return res.status(409).json({ error: "Kullanıcı zaten bu gruba üye", success: false });
-    }
+  const checkResult = await db.query(checkQuery, [user_id, group_id]);
+  if (checkResult.rowCount > 0) {
+    return res.status(409).json({ error: "Kullanıcı zaten bu gruba üye", success: false });
+  }
 
-  
+
   try {
     // 2 parametre - 2 değer gönder (is_admin zaten default false)
     const insertJoinRequestQuery = `INSERT INTO chat_members (user_id, chat_group_id) VALUES ($1, $2)`;
@@ -83,5 +83,29 @@ router.post("/:group_id/join", async (req,res) => {
     res.status(500).json({ error: "Grupa katılım isteği gönderilemedi" });
   }
 });
+
+// Grupa katılım durumu kontrolü
+router.get("/:group_id/is-member", async (req, res) => {
+  const { group_id } = req.params;
+  const { user_id } = req.query; // ✅ GET'te query params kullan
+  
+  if (!user_id) {
+    return res.status(400).json({ error: "user_id gerekli", success: false });
+  }
+  
+  try {
+    const checkQuery = `SELECT 1 FROM chat_members WHERE user_id = $1 AND chat_group_id = $2`;
+    const checkResult = await db.query(checkQuery, [user_id, group_id]);
+    if (checkResult.rowCount > 0) {
+      res.status(200).json({ is_member: true, success: true });
+    } else {
+      res.status(200).json({ is_member: false, success: true });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Grupa katılım durumu kontrolü yapılamadı" });
+  }
+});
+
 
 module.exports = router;

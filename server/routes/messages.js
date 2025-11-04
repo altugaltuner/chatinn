@@ -174,5 +174,50 @@ router.get('/conversations/:userId', async (req, res) => {
   }
 });
 
+//Mesajları indir (GET /api/messages/:roomId/download)
+router.get('/:roomId/download', async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const roomInfo = parseRoomId(roomId);
+    if (!roomInfo) {
+      return res.status(400).json({ error: 'Geçersiz roomId formatı' });
+    }
+    
+    // Birebir mesajları getir
+    const result = await db.query(
+      `SELECT 
+        m.id,
+        m.sender_id,
+        m.receiver_id,
+        m.message,
+        m.created_at,
+        u.name as sender_name
+      FROM messages m
+      JOIN users u ON m.sender_id = u.id
+      WHERE (m.sender_id = $1 AND m.receiver_id = $2)
+         OR (m.sender_id = $2 AND m.receiver_id = $1)
+      ORDER BY m.created_at ASC`,
+      [roomInfo.userId1, roomInfo.userId2]
+    );
+
+    console.log(result.rows, "result.rows");
+
+    // Mesajları text formatında hazırla
+    const messagesText = result.rows.map(msg => {
+      const date = new Date(msg.created_at).toLocaleString('tr-TR');
+      return `[${date}] ${msg.sender_name}: ${msg.message}`;
+    }).join('\n');
+
+    res.json({ 
+      success: true, 
+      messages: messagesText,
+      count: result.rows.length 
+    });
+  } catch (err) {
+    console.error('Mesajları indirme hatası:', err);
+    res.status(500).json({ error: 'Mesajlar indirilemedi' });
+  }
+});
+
 module.exports = router;
 
