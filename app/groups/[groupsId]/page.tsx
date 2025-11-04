@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import { useAuth } from "@/lib/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface Group {
   id: number;
@@ -16,11 +17,15 @@ interface Group {
 
 export default function GroupPage({ params }: { params: Promise<{ groupsId: string }> }) {
   const { groupsId } = use(params); // react.use hook'u ile params'ı alıyoruz. çünkü params promise'dir.
+  const router = useRouter();
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   console.log(user, "user");
   const [isMember, setIsMember] = useState<boolean | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
+  const [isPublicGroup, setIsPublicGroup] = useState<boolean>(false);
 
   useEffect(() => {
     // User yoksa kontrolü atlama
@@ -57,6 +62,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupsId: stri
       .then((res) => res.json())
       .then((data) => {
         console.log(data, "group");
+        setIsPublicGroup(data.is_public);
         setGroup(data);
         setLoading(false);
       })
@@ -71,31 +77,73 @@ export default function GroupPage({ params }: { params: Promise<{ groupsId: stri
       alert("Lütfen önce giriş yapın!");
       return;
     }
+    if (isPublicGroup) {
+      router.push(`/groups/${groupsId}`);
 
-    console.log("Gruba katılma isteği gönderiliyor:", { user_id: user.id, groupsId });
+      console.log("Gruba katılma isteği gönderiliyor:", { user_id: user.id, groupsId });
 
-    fetch(`http://localhost:3001/api/groups/${groupsId}/join`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ user_id: user.id }), // group_id URL'den alınıyor, body'de gerek yok
-    })
+      fetch(`http://localhost:3001/api/groups/${groupsId}/join`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id: user.id }), // group_id URL'den alınıyor, body'de gerek yok
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Sunucu yanıtı:", data);
+          if (data.success) {
+            alert("✅ " + data.message);
+            window.location.reload(); // Sayfayı yenile
+          } else {
+            alert("❌ " + data.error);
+          }
+        })
+        .catch((err) => {
+          console.error("Grupa katılım isteği gönderilemedi:", err);
+          alert("❌ Bağlantı hatası!");
+        });
+    } else {
+      alert("Bu grup özeldir, katılma isteği gönderilemez.");
+
+      // grup adminine katılma isteği gönder
+    }
+  }
+
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/groups/${groupsId}/messages`)
       .then((res) => res.json())
       .then((data) => {
-        console.log("Sunucu yanıtı:", data);
-        if (data.success) {
-          alert("✅ " + data.message);
-          window.location.reload(); // Sayfayı yenile
+        console.log(data, "messages");
+        setMessages(data);
+      })
+      .catch((err) => {
+        console.error("Mesajlar yüklenemedi:", err);
+      });
+  }, [groupsId]);
+
+  useEffect(() => {
+    console.log('🔍 Üye listesi fetch ediliyor, groupsId:', groupsId);
+    fetch(`http://localhost:3001/api/groups/${groupsId}/members`)
+      .then((res) => {
+        console.log('📡 Response status:', res.status);
+        return res.json();
+      })
+      .then((data) => {
+        console.log('📦 Gelen data:', data);
+        if (data.success && data.members) {
+          console.log('✅ Members set ediliyor:', data.members);
+          setMembers(data.members);
         } else {
-          alert("❌ " + data.error);
+          console.warn('⚠️ Data success değil veya members yok:', data);
+          setMembers([]);
         }
       })
       .catch((err) => {
-        console.error("Grupa katılım isteği gönderilemedi:", err);
-        alert("❌ Bağlantı hatası!");
+        console.error("❌ Üye listesi yüklenemedi:", err);
+        setMembers([]);
       });
-  };
+  }, [groupsId]);
 
   if (loading) {
     return (
@@ -194,7 +242,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupsId: stri
                       d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
                     />
                   </svg>
-                  Gruba İstek At
+                  {isPublicGroup ? "Gruba Katıl" : "Gruba İstek At"}
                 </button>
               </div>
 
@@ -214,150 +262,164 @@ export default function GroupPage({ params }: { params: Promise<{ groupsId: stri
     );
   }
 
-return (
-  <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-    {/* Sol Sidebar - Grup Üyeleri */}
-    <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          {group.name}
-        </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {group.population} üye
-        </p>
-      </div>
-
-      {/* Üye Listesi */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Örnek Üyeler - Şimdilik statik */}
-        {[
-          { id: 1, name: "ahmetyilmaz", status: "Çevrimiçi" },
-          { id: 2, name: "ayşedemir", status: "Çevrimdışı" },
-          { id: 3, name: "mehmetaslan", status: "Çevrimiçi" },
-          { id: 4, name: "zeynepkaya", status: "Çevrimdışı" },
-          { id: 5, name: "canyilmaz", status: "Çevrimiçi" },
-        ].map((member) => (
-          <div
-            key={member.id}
-            className="p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              {/* Avatar */}
-              <div className="relative">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                  <span className="text-white font-semibold text-lg">
-                    {member.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                {/* Online Indicator */}
-                {member.status === "Çevrimiçi" && (
-                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
-                )}
-              </div>
-
-              {/* İsim ve Durum */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                  {member.name}
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {member.status}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    {/* Sağ Taraf - Mesajlaşma Alanı */}
-    <div className="flex-1 flex flex-col bg-white dark:bg-gray-800">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{group.name}</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{group.description}</p>
+  return (
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Sol Sidebar - Grup Üyeleri */}
+      <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            {group.name}
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            {group.population} üye
+          </p>
         </div>
-        <button className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Mesajları İndir
-        </button>
-      </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
-        {/* Örnek Mesajlar - Şimdilik statik */}
-        {[
-          { id: 1, sender: "ayşedemir", message: "Selam 1! Nasılsın?", time: "12:06", isMe: false },
-          { id: 2, sender: "me", message: "rfrfrfr", time: "12:08", isMe: true },
-          { id: 3, sender: "mehmetaslan", message: "Bugün toplantı var mı?", time: "12:10", isMe: false },
-          { id: 4, sender: "me", message: "Evet saat 3'te", time: "12:12", isMe: true },
-          { id: 5, sender: "zeynepkaya", message: "Ben de katılacağım", time: "12:15", isMe: false },
-        ].map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.isMe ? "justify-end" : "justify-start"}`}
-          >
-            <div className={`max-w-[70%] ${msg.isMe ? "" : "flex items-start gap-2"}`}>
-              {/* Avatar (sadece diğer kullanıcılar için) */}
-              {!msg.isMe && (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs font-semibold">
-                    {msg.sender.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-              
-              <div>
-                {/* Gönderen adı (sadece diğer kullanıcılar için) */}
-                {!msg.isMe && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 ml-1">
-                    {msg.sender}
-                  </p>
-                )}
-                
-                {/* Mesaj balonu */}
-                <div
-                  className={`rounded-lg px-4 py-2 ${
-                    msg.isMe
-                      ? "bg-blue-500 text-white"
-                      : "bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600"
-                  }`}
-                >
-                  <p className="text-sm">{msg.message}</p>
-                  <span
-                    className={`text-xs mt-1 block ${
-                      msg.isMe ? "text-blue-100" : "text-gray-500 dark:text-gray-400"
-                    }`}
-                  >
-                    {msg.time}
-                  </span>
+        {/* Üye Listesi */}
+        <div className="flex-1 overflow-y-auto">
+          {members.length === 0 ? (
+            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+              Henüz üye yok
+            </div>
+          ) : (
+            members.map((member) => (
+              <div
+                onClick={() => router.push(`/user/${member.id}`)}
+                key={member.user_id}
+                className="p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  {/* Avatar */}
+                  <div className="relative">
+                    {member.picture ? (
+                      <img
+                        src={member.picture}
+                        alt={member.name}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-white font-semibold text-lg">
+                          {member.name?.charAt(0).toUpperCase() || "?"}
+                        </span>
+                      </div>
+                    )}
+                    {/* Online Indicator */}
+                    {member.is_online && (
+                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                    )}
+                  </div>
+
+                  {/* İsim ve Durum */}
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className="flex items-center gap-2 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                    >
+                      <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                        {member.name}
+                      </h3>
+                      {/* Admin Badge */}
+                      {member.is_admin && (
+                        <span className="text-yellow-500 text-xs">👑</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {member.is_online ? "Çevrimiçi" : "Çevrimdışı"}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
+            ))
+          )}
+        </div>
       </div>
 
-      {/* Input */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Mesaj yazın..."
-            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
-          />
-          <button className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors">
-            Gönder
+      {/* Sağ Taraf - Mesajlaşma Alanı */}
+      <div className="flex-1 flex flex-col bg-white dark:bg-gray-800">
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{group.name}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{group.description}</p>
+          </div>
+          <button className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Mesajları İndir
           </button>
         </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
+          {/* Örnek Mesajlar - Şimdilik statik */}
+          {[
+            { id: 1, sender: "ayşedemir", message: "Selam 1! Nasılsın?", time: "12:06", isMe: false },
+            { id: 2, sender: "me", message: "rfrfrfr", time: "12:08", isMe: true },
+            { id: 3, sender: "mehmetaslan", message: "Bugün toplantı var mı?", time: "12:10", isMe: false },
+            { id: 4, sender: "me", message: "Evet saat 3'te", time: "12:12", isMe: true },
+            { id: 5, sender: "zeynepkaya", message: "Ben de katılacağım", time: "12:15", isMe: false },
+          ].map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex ${msg.isMe ? "justify-end" : "justify-start"}`}
+            >
+              <div className={`max-w-[70%] ${msg.isMe ? "" : "flex items-start gap-2"}`}>
+                {/* Avatar (sadece diğer kullanıcılar için) */}
+                {!msg.isMe && (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-xs font-semibold">
+                      {msg.sender.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+
+                <div>
+                  {/* Gönderen adı (sadece diğer kullanıcılar için) */}
+                  {!msg.isMe && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 ml-1">
+                      {msg.sender}
+                    </p>
+                  )}
+
+                  {/* Mesaj balonu */}
+                  <div
+                    className={`rounded-lg px-4 py-2 ${msg.isMe
+                        ? "bg-blue-500 text-white"
+                        : "bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600"
+                      }`}
+                  >
+                    <p className="text-sm">{msg.message}</p>
+                    <span
+                      className={`text-xs mt-1 block ${msg.isMe ? "text-blue-100" : "text-gray-500 dark:text-gray-400"
+                        }`}
+                    >
+                      {msg.time}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Input */}
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Mesaj yazın..."
+              className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+            <button className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors">
+              Gönder
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-)
+  )
 
 
 

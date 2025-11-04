@@ -14,10 +14,24 @@ interface Group {
   population: number;
 }
 
+interface GroupRequest {
+  group_id: number;
+  group_name: string;
+  user_id: number;
+  user_name: string;
+  user_picture: string;
+  created_at: string;
+}
+
 export default function GroupsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [groupRequests, setGroupRequests] = useState<GroupRequest[]>([]);
+  const [pendingRequests, setPendingRequests] = useState(0);
+
+
   useEffect(() => {
     fetch(`http://localhost:3001/api/groups`)
       .then((res) => res.json())
@@ -30,6 +44,40 @@ export default function GroupsPage() {
         setLoading(false);
       });
   }, []);
+
+  // Grup katılma isteklerini yükle (şimdilik mock data)
+  useEffect(() => {
+    // TODO: Backend'den grup katılma isteklerini çek
+    // Şimdilik örnek veri
+    const mockRequests: GroupRequest[] = [
+      {
+        group_id: 1,
+        group_name: "Yazılım Geliştiriciler",
+        user_id: 5,
+        user_name: "ahmetyilmaz",
+        user_picture: "/defaultpp.jpg",
+        created_at: new Date().toISOString(),
+      },
+    ];
+    setGroupRequests(mockRequests);
+    setPendingRequests(mockRequests.length);
+  }, []);
+
+  const handleAcceptGroupRequest = (groupId: number, userId: number) => {
+    console.log(`Grup ${groupId} için ${userId} kullanıcısının isteği kabul edildi`);
+    // TODO: Backend'e kabul isteği gönder
+    // Listeyi güncelle
+    setGroupRequests(groupRequests.filter(req => !(req.group_id === groupId && req.user_id === userId)));
+    setPendingRequests(prev => prev - 1);
+  };
+
+  const handleRejectGroupRequest = (groupId: number, userId: number) => {
+    console.log(`Grup ${groupId} için ${userId} kullanıcısının isteği reddedildi`);
+    // TODO: Backend'e red isteği gönder
+    // Listeyi güncelle
+    setGroupRequests(groupRequests.filter(req => !(req.group_id === groupId && req.user_id === userId)));
+    setPendingRequests(prev => prev - 1);
+  };
 
   if (loading) {
     return (
@@ -58,6 +106,104 @@ export default function GroupsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+      {/* Bildirim Çan Butonu - Fixed Position */}
+      <div className="fixed top-8 right-8 z-50">
+        <div className="relative notification-dropdown">
+          <button
+            onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+            className="relative w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            {/* Çan İkonu */}
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+
+            {/* Badge - İstek sayısı */}
+            {pendingRequests > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center border-2 border-gray-50 dark:border-gray-900">
+                {pendingRequests}
+              </span>
+            )}
+          </button>
+
+          {/* Dropdown Panel - Açılır Kapanır Alan */}
+          {isNotificationOpen && (
+            <div className="absolute right-0 top-16 w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              {/* Başlık */}
+              <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-3">
+                <h3 className="text-white font-semibold text-lg">Grup Katılma İstekleri</h3>
+                <p className="text-indigo-100 text-sm">{pendingRequests} bekleyen istek</p>
+              </div>
+
+              {/* İçerik Alanı */}
+              <div className="p-4 max-h-96 overflow-y-auto">
+                {groupRequests.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <p>Bekleyen istek yok</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {groupRequests.map((request) => (
+                      <div
+                        key={`${request.group_id}-${request.user_id}`}
+                        className="flex flex-col gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Profil Resmi */}
+                          <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                            <span className="text-white font-semibold text-lg">
+                              {request.user_name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+
+                          {/* İsim ve Grup Bilgisi */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+                              {request.user_name}
+                            </h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                              "{request.group_name}" grubuna katılmak istiyor
+                            </p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                              {new Date(request.created_at).toLocaleDateString("tr-TR")}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Butonlar */}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() =>
+                              handleAcceptGroupRequest(request.group_id, request.user_id)
+                            }
+                            className="flex-1 p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-medium"
+                          >
+                            ✓ Kabul Et
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleRejectGroupRequest(request.group_id, request.user_id)
+                            }
+                            className="flex-1 p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm font-medium"
+                          >
+                            ✗ Reddet
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Tüm Gruplar</h1>

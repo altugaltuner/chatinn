@@ -5,20 +5,36 @@ export default function CreateGroup({ setShowCreateGroupModal }: { setShowCreate
   const { user } = useAuth();
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // groupType'ı boolean is_public'e çevir
+    const isPublic = groupType === "public";
+    
     fetch("http://localhost:3001/api/groups", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name: groupName, description: groupDescription, type: groupType, created_by: user?.id }),
+      body: JSON.stringify({ 
+        name: groupName, 
+        description: groupDescription, 
+        is_public: isPublic, 
+        created_by: user?.id 
+      }),
     })
-      .then((res) => {
-        if (res.ok) {
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          alert("✅ " + data.message);
           setShowCreateGroupModal(false);
+          window.location.reload(); // Sayfayı yenile
+        } else {
+          alert("❌ Grup oluşturulamadı");
+          console.error("Failed to create group:", data.error);
         }
-        else {
-          console.error("Failed to create group");
-        }
+      })
+      .catch((err) => {
+        console.error("Grup oluşturma hatası:", err);
+        alert("❌ Bağlantı hatası!");
       });
   };
 
@@ -46,43 +62,62 @@ const handleGroupDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>)
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Grup Adı</label>
-            <input type="text" value={groupName} onChange={handleGroupNameChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-700 dark:text-white focus:border-indigo-500 dark:focus:ring-indigo-500" />
+            <input 
+              type="text" 
+              value={groupName} 
+              onChange={handleGroupNameChange} 
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2" 
+              placeholder="Örn: Yazılım Geliştiriciler"
+              required
+            />
           </div>
           
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Grup Açıklaması</label>
-            <textarea value={groupDescription} onChange={handleGroupDescriptionChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-700 dark:text-white focus:border-indigo-500 dark:focus:ring-indigo-500" />
+            <textarea 
+              value={groupDescription} 
+              onChange={handleGroupDescriptionChange} 
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 min-h-[80px]" 
+              placeholder="Grup hakkında kısa bir açıklama..."
+              required
+            />
           </div>
 
-          <button type="submit" disabled={!groupName || !groupDescription || !groupType} className="w-full rounded-md bg-indigo-500 text-white px-4 py-2 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed">Grup Oluştur</button>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grup Türü</label>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Grup Türü</label>
             <div className="flex items-center gap-6">
-              <label className="inline-flex items-center">
+              <label className="inline-flex items-center cursor-pointer">
                 <input
                   type="radio"
                   name="groupType"
                   value="private"
                   checked={groupType === "private"}
                   onChange={handleGroupTypeChange}
-                  className="form-radio text-indigo-600"
+                  className="form-radio text-indigo-600 w-4 h-4"
                 />
-                <span className="ml-2 text-gray-700 dark:text-gray-200">Özel</span>
+                <span className="ml-2 text-gray-700 dark:text-gray-200">🔒 Özel</span>
               </label>
-              <label className="inline-flex items-center">
+              <label className="inline-flex items-center cursor-pointer">
                 <input
                   type="radio"
                   name="groupType"
                   value="public"
                   checked={groupType === "public"}
                   onChange={handleGroupTypeChange}
-                  className="form-radio text-indigo-600"
+                  className="form-radio text-indigo-600 w-4 h-4"
                 />
-                <span className="ml-2 text-gray-700 dark:text-gray-200">Genel</span>
+                <span className="ml-2 text-gray-700 dark:text-gray-200">🌍 Genel</span>
               </label>
             </div>
           </div>
+
+          <button 
+            type="submit" 
+            disabled={!groupName || !groupDescription || !groupType} 
+            className="w-full rounded-md bg-indigo-500 text-white px-4 py-2 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+          >
+            Grup Oluştur
+          </button>
         </form>
       </div>
     </div>
