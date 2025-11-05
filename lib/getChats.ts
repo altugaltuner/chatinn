@@ -1,5 +1,5 @@
 interface Chat {
-  id: string;
+  id: number;
   name: string;
   lastMessage: string;
   time: string;

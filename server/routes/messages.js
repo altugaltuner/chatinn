@@ -156,7 +156,8 @@ router.get('/conversations/:userId', async (req, res) => {
 
     // Sonuçları formatla
     const conversations = result.rows.map(row => ({
-      id: row.other_user_id.toString(),
+      id: row.other_user_id,
+      otherUserId: row.other_user_id,
       name: row.name,
       picture: row.picture,
       lastMessage: row.last_message,
@@ -216,6 +217,33 @@ router.get('/:roomId/download', async (req, res) => {
   } catch (err) {
     console.error('Mesajları indirme hatası:', err);
     res.status(500).json({ error: 'Mesajlar indirilemedi' });
+  }
+});
+
+// Mesajları okundu işaretle - bir konuşmadaki KARŞI TARAFIN bana gönderdiği tüm okunmamışlar
+// PUT /api/messages/read/:otherUserId?currentUserId=ME
+router.put('/read/:otherUserId', async (req, res) => {
+  try {
+    const otherUserId = parseInt(req.params.otherUserId);
+    const currentUserId = parseInt(req.query.currentUserId);
+
+    if (!otherUserId || !currentUserId) {
+      return res.status(400).json({ error: 'otherUserId ve currentUserId gereklidir' });
+    }
+
+    const result = await db.query(
+      `UPDATE messages
+       SET is_read = true
+       WHERE receiver_id = $1
+         AND sender_id = $2
+         AND is_read = false`,
+      [currentUserId, otherUserId]
+    );
+
+    res.json({ success: true, message: 'Konuşmadaki okunmamış mesajlar okundu işaretlendi' });
+  } catch (err) {
+    console.error('Mesajları okundu işaretleme hatası:', err);
+    res.status(500).json({ error: 'Mesajlar okundu işaretlenemedi' });
   }
 });
 

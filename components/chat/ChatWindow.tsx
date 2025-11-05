@@ -14,7 +14,7 @@ interface Message {
 }
 
 interface ChatTitles{
-  id: string;
+  id: number;
   name: string;
 }
 
@@ -26,7 +26,7 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [chatTitles, setChatTitles] = useState<ChatTitles[]>([]);
-  const chatTitle = chatTitles.find(chat => chat.id === chatId)?.name;
+  const chatTitle = chatTitles.find(chat => chat.id === parseInt(chatId))?.name;
 
   // Konuşmaları yükle
   useEffect(() => {

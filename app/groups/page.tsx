@@ -72,24 +72,6 @@ export default function GroupsPage() {
       });
   }, [user?.id]);
 
-  // // Grup katılma isteklerini yükle (şimdilik mock data)
-  // useEffect(() => {
-  //   // TODO: Backend'den grup katılma isteklerini çek
-  //   // Şimdilik örnek veri
-  //   const mockRequests: GroupRequest[] = [
-  //     {
-  //       group_id: 1,
-  //       group_name: "Yazılım Geliştiriciler",
-  //       user_id: 5,
-  //       user_name: "ahmetyilmaz",
-  //       user_picture: "/defaultpp.jpg",
-  //       created_at: new Date().toISOString(),
-  //     },
-  //   ];
-  //   setGroupRequests(mockRequests);
-  //   setPendingRequests(mockRequests.length);
-  // }, []);
-
   const handleAcceptGroupRequest = (groupId: number, userId: number) => {
     console.log(`Grup ${groupId} için ${userId} kullanıcısının isteği kabul edildi`);
     fetch(`http://localhost:3001/api/groups/group_requests/accept/${groupId}/${userId}`, {

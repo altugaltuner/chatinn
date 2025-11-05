@@ -6,12 +6,13 @@ import { useState, useEffect } from "react";
 import { getChats, getCurrentUserId } from "@/lib/getChats";
 
 interface Chat {
-  id: string;
+  id: number;
   name: string;
   lastMessage: string;
   time: string;
   unread?: number;
   picture?: string;
+  otherUserId?: number;
 }
 
 export default function ChatList() {
@@ -37,6 +38,26 @@ export default function ChatList() {
     loadConversations();
   }, []);
 
+  const markAsRead = (chatId: number, otherUserId?: number) => {
+    const me = getCurrentUserId();
+    if (!otherUserId) return;
+    fetch(`http://localhost:3001/api/messages/read/${otherUserId}?currentUserId=${me}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data, "data");
+        setChats(prev => prev.map(c => c.id === chatId ? { ...c, unread: 0 } : c));
+      })
+      .catch((err) => {
+        console.error(err, "err");
+      });
+  };
+
+
   return (
     <div className="w-full h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
       {/* Header */}
@@ -56,11 +77,12 @@ export default function ChatList() {
           </div>
         ) : (
           chats.map((chat) => {
+            console.log(chat, "chat");
             const isActive = pathname === `/chats/${chat.id}`;
-
             return (
               <Link
-                key={chat.id}
+                onClick={() => markAsRead(chat.id, chat.otherUserId)}
+                key={`${chat.id}-${chat.otherUserId ?? ''}`}
                 href={`/chats/${chat.id}`}
                 className={`block p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${isActive ? "bg-blue-50 dark:bg-gray-700" : ""
                   }`}
