@@ -207,9 +207,25 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
     <div className="flex flex-col h-full bg-white dark:bg-gray-800">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{chatTitle}</h2>
-        <button onClick={() => getCopy()}>Mesajları İndir <ClipboardIcon className="w-4 h-4" /> </button>
-      
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white truncate">
+              {chatTitle}
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Sohbet başlığı</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => getCopy()}
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 text-white text-sm font-medium px-3 py-2 shadow-sm hover:bg-indigo-700 active:bg-indigo-800 transition-colors"
+              title="Mesajları indir"
+            >
+              <ClipboardIcon className="w-4 h-4" />
+              <span>Mesajları İndir</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Messages */}

@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import { useAuth } from "@/lib/AuthContext";
-
+import { useRouter } from "next/navigation";
 interface Group {
   id: number;
   name: string;
@@ -26,9 +26,31 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
   const [loading, setLoading] = useState(true);
   const [friendRequestSent, setFriendRequestSent] = useState(false);
   const [sendingRequest, setSendingRequest] = useState(false);
-
+  const [isFriendWithMe, setIsFriendWithMe] = useState<boolean | null>(null);
   // Bu profil sayfası login olmuş kullanıcının kendi profili mi?
   const isOwnProfile = currentUser && currentUser.id === parseInt(userId);
+  const router = useRouter();
+
+useEffect(() => {
+  // currentUser yüklenene kadar bekle
+  if (!currentUser?.id || !userId) return;
+  
+  fetch(`http://localhost:3001/api/friendships/status/${currentUser.id}/${userId}`)
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.status === "accepted") {
+        console.log("Arkadaşım", data);
+        setIsFriendWithMe(true);
+      } else {
+        setIsFriendWithMe(false);
+      }
+    })
+    .catch((err) => {
+      console.error("Arkadaşlık durumu yüklenemedi:", err);
+      setIsFriendWithMe(null);
+    });
+}, [currentUser?.id, userId]);
+
 
   useEffect(() => {
     fetch(`http://localhost:3001/api/user/${userId}`)
@@ -87,6 +109,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
     } finally {
       setSendingRequest(false);
     }
+  };
+
+  const routeToChat = () => {
+    router.push(`/chats/${userId}`);
   };
 
   if (loading) {
@@ -164,7 +190,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
             {/* Action Buttons - Sadece başkasının profilinde göster */}
             {!isOwnProfile && (
               <div className="flex flex-wrap gap-4 justify-center mb-8">
-                <button
+                {!isFriendWithMe && (<button
                   onClick={handleAddFriend}
                   disabled={sendingRequest || friendRequestSent}
                   className={`flex items-center gap-2 font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none ${
@@ -225,9 +251,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
                       Arkadaşa Ekle
                     </>
                   )}
-                </button>
+                </button>)}
+                
 
-                <button className="flex items-center gap-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
+                <button onClick={routeToChat} className="flex items-center gap-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -237,18 +264,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
                     />
                   </svg>
                   Mesaj At
-                </button>
-
-                <button className="flex items-center gap-2 bg-gray-600 dark:bg-gray-400 text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-                    />
-                  </svg>
-                  Titreşim Gönder
                 </button>
               </div>
             )}

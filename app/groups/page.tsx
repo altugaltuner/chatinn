@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Timestamp } from "next/dist/server/lib/cache-handlers/types";
 import CreateGroup from "@/components/modals/createGroup";
+import { useAuth } from "@/lib/AuthContext";
 
 interface Group {
   id: number;
@@ -15,12 +16,15 @@ interface Group {
 }
 
 interface GroupRequest {
+  id: number;
   group_id: number;
-  group_name: string;
   user_id: number;
-  user_name: string;
-  user_picture: string;
+  status: string;
   created_at: string;
+  user_name: string;
+  user_picture?: string;
+  group_name: string;
+  created_by: number;
 }
 
 export default function GroupsPage() {
@@ -30,7 +34,7 @@ export default function GroupsPage() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [groupRequests, setGroupRequests] = useState<GroupRequest[]>([]);
   const [pendingRequests, setPendingRequests] = useState(0);
-
+  const { user } = useAuth();
 
   useEffect(() => {
     fetch(`http://localhost:3001/api/groups`)
@@ -45,26 +49,59 @@ export default function GroupsPage() {
       });
   }, []);
 
-  // Grup katılma isteklerini yükle (şimdilik mock data)
   useEffect(() => {
-    // TODO: Backend'den grup katılma isteklerini çek
-    // Şimdilik örnek veri
-    const mockRequests: GroupRequest[] = [
-      {
-        group_id: 1,
-        group_name: "Yazılım Geliştiriciler",
-        user_id: 5,
-        user_name: "ahmetyilmaz",
-        user_picture: "/defaultpp.jpg",
-        created_at: new Date().toISOString(),
-      },
-    ];
-    setGroupRequests(mockRequests);
-    setPendingRequests(mockRequests.length);
-  }, []);
+    if (!user?.id) return;
+    fetch(`http://localhost:3001/api/groups/group_requests?user_id=${user.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data, "group requests");
+        // Güvenli kontrol: data bir array mi?
+        if (Array.isArray(data)) {
+          setGroupRequests(data);
+          setPendingRequests(data.length);
+        } else {
+          console.warn("Backend'den array değil başka bir veri geldi:", data);
+          setGroupRequests([]);
+          setPendingRequests(0);
+        }
+      })
+      .catch((err) => {
+        console.error("Group requests cant be downloaded:", err);
+        setGroupRequests([]);
+        setPendingRequests(0);
+      });
+  }, [user?.id]);
+
+  // // Grup katılma isteklerini yükle (şimdilik mock data)
+  // useEffect(() => {
+  //   // TODO: Backend'den grup katılma isteklerini çek
+  //   // Şimdilik örnek veri
+  //   const mockRequests: GroupRequest[] = [
+  //     {
+  //       group_id: 1,
+  //       group_name: "Yazılım Geliştiriciler",
+  //       user_id: 5,
+  //       user_name: "ahmetyilmaz",
+  //       user_picture: "/defaultpp.jpg",
+  //       created_at: new Date().toISOString(),
+  //     },
+  //   ];
+  //   setGroupRequests(mockRequests);
+  //   setPendingRequests(mockRequests.length);
+  // }, []);
 
   const handleAcceptGroupRequest = (groupId: number, userId: number) => {
     console.log(`Grup ${groupId} için ${userId} kullanıcısının isteği kabul edildi`);
+    fetch(`http://localhost:3001/api/groups/group_requests/accept/${groupId}/${userId}`, {
+      method: "PUT",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data, "group request accepted");
+      })
+      .catch((err) => {
+        console.error("Group request acceptance failed:", err);
+      });
     // TODO: Backend'e kabul isteği gönder
     // Listeyi güncelle
     setGroupRequests(groupRequests.filter(req => !(req.group_id === groupId && req.user_id === userId)));

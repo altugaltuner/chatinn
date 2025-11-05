@@ -3,6 +3,8 @@ import { use, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 
 interface Friend {
   id: number;
@@ -21,6 +23,8 @@ interface Request {
 
 export default function MyFriendsPage({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = use(params);
+  const router = useRouter();
+
   const { user: currentUser } = useAuth();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
@@ -179,6 +183,10 @@ export default function MyFriendsPage({ params }: { params: Promise<{ userId: st
   }
 
   const isOwnProfile = currentUser && currentUser.id === parseInt(userId);
+
+  const routeToChat = (friendId: number) => {
+    router.push(`/chats/${friendId}`);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
@@ -353,7 +361,7 @@ export default function MyFriendsPage({ params }: { params: Promise<{ userId: st
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg transition-colors font-medium text-sm">
+                  <button onClick={() => routeToChat(friend.id)} className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg transition-colors font-medium text-sm">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"

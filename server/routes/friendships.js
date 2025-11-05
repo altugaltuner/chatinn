@@ -85,7 +85,15 @@ router.get("/all", async (req, res) => {
 
 // Belirli iki kullanıcı arasındaki arkadaşlık durumunu kontrol et
 router.get("/status/:user_id/:friend_id", async (req, res) => {
-  const { user_id, friend_id } = req.params; // ✅ Burayı ekledim!
+  const { user_id, friend_id } = req.params;
+
+  // Validasyon - undefined veya geçersiz ID kontrolü
+  if (!user_id || !friend_id || user_id === 'undefined' || friend_id === 'undefined') {
+    return res.status(400).json({
+      error: "Geçersiz kullanıcı ID'leri",
+      message: "user_id ve friend_id gereklidir"
+    });
+  }
 
   try {
     const query = `
@@ -249,6 +257,23 @@ router.put("/reject/:userId/:friendId", async (req, res) => {
     res.json({ message: "Arkadaşlık isteği reddedildi", success: true });
   } catch (error) {
     console.error("Arkadaşlık isteği reddedilemedi:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
+  }
+});
+
+
+router.get("/isFriend/:userId/:friendId", async (req, res) => {
+  const {userId, friendId} = req.params;
+  try {
+    const query = `SELECT * FROM friendships WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)`
+    const result = await db.query(query, [userId, friendId]);
+    if (result.rows.length > 0) {
+      res.json({ isFriend: true });
+    } else {
+      res.json({ isFriend: false });
+    }
+  } catch (error) {
+    console.error("Arkadaşlık durumu kontrol hatası:", error);
     res.status(500).json({ error: "Sunucu hatası" });
   }
 });

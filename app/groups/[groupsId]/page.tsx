@@ -92,8 +92,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupsId: stri
         .then((res) => res.json())
         .then((data) => {
           console.log("Sunucu yanıtı:", data);
-          if (data.success) {
-            alert("✅ " + data.message);
+          if (data.success === true) {
             window.location.reload(); // Sayfayı yenile
           } else {
             alert("❌ " + data.error);
@@ -103,10 +102,18 @@ export default function GroupPage({ params }: { params: Promise<{ groupsId: stri
           console.error("Grupa katılım isteği gönderilemedi:", err);
           alert("❌ Bağlantı hatası!");
         });
-    } else {
-      alert("Bu grup özeldir, katılma isteği gönderilemez.");
-
-      // grup adminine katılma isteği gönder
+    } else if(isPublicGroup === false) {
+      fetch(`http://localhost:3001/api/groups/${groupsId}/join`, { // buraya değil
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id: user.id }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Sunucu yanıtı:", data);
+        });
     }
   }
 
