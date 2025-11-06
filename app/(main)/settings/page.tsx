@@ -74,6 +74,10 @@ export default function SettingsPage() {
     setIsEditingAbout(false);
   };
 
+  const ChangePassword = () => {
+    router.push("/settings/change-password");
+  };
+
   if (!currentUser) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -269,7 +273,7 @@ export default function SettingsPage() {
           </h2>
 
           <div className="space-y-3">
-            <button className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
+            <button onClick={ChangePassword} className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
               <span className="text-gray-900 dark:text-white">Şifremi Değiştir</span>
               <svg
                 className="w-5 h-5 text-gray-400"

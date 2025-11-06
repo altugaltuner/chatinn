@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
+
 interface Group {
   id: number;
   name: string;
