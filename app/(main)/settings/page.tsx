@@ -6,11 +6,13 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 export default function SettingsPage() {
-  const { user: currentUser, logout } = useAuth();
+  const { user: currentUser, logout, updateUser } = useAuth();
   const router = useRouter();
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [aboutText, setAboutText] = useState("");
   const [bio, setBio] = useState<string>("");
+  const [isUploadingPicture, setIsUploadingPicture] = useState(false);
+  const [profilePicture, setProfilePicture] = useState<string>("");
 
   const handleLogout = () => {
     logout();
@@ -23,8 +25,10 @@ export default function SettingsPage() {
       const data = await response.json();
       console.log("user bio data:", data);
       const userBio = data.bio || "";
+      const userPicture = data.picture || "/defaultpp.jpg";
       setBio(userBio);
       setAboutText(userBio);
+      setProfilePicture(userPicture);
     } catch (error) {
       console.error("Bio yüklenirken hata:", error);
     }
@@ -78,6 +82,57 @@ export default function SettingsPage() {
     router.push("/settings/change-password");
   };
 
+  const handlePictureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Dosya boyutu kontrolü (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Dosya boyutu 5MB'dan küçük olmalıdır");
+      return;
+    }
+
+    // Dosya tipi kontrolü
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Sadece resim dosyaları yüklenebilir (jpeg, jpg, png, gif, webp)");
+      return;
+    }
+
+    setIsUploadingPicture(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("picture", file);
+
+      const response = await fetch(`http://localhost:3001/api/user/${currentUser?.id}/upload-picture`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log("Profil fotoğrafı yüklendi:", data.picture);
+        setProfilePicture(data.picture);
+        // AuthContext'i güncelle
+        updateUser({ picture: data.picture });
+        alert("✅ Profil fotoğrafı başarıyla güncellendi!");
+        // Sayfayı yenile
+        if (currentUser?.id) {
+          loadBioDB(currentUser.id);
+        }
+      } else {
+        alert("❌ " + data.error);
+      }
+    } catch (error) {
+      console.error("Profil fotoğrafı yüklenirken hata:", error);
+      alert("❌ Profil fotoğrafı yüklenirken hata oluştu");
+    } finally {
+      setIsUploadingPicture(false);
+    }
+  };
+
   if (!currentUser) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -116,13 +171,53 @@ export default function SettingsPage() {
             </h2>
 
             <div className="flex flex-col items-center text-center">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-700 mb-4">
-                <Image
-                  src={currentUser.picture || "/defaultpp.jpg"}
-                  alt={currentUser.name}
-                  width={128}
-                  height={128}
-                  className="w-full h-full object-cover"
+              <div className="relative w-32 h-32 mb-4">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-700">
+                  <Image
+                    src={profilePicture || currentUser.picture || "/defaultpp.jpg"}
+                    alt={currentUser.name}
+                    width={128}
+                    height={128}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {/* Fotoğraf Değiştir Butonu */}
+                <label
+                  htmlFor="profile-picture-input"
+                  className="absolute bottom-0 right-0 w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-colors"
+                  title="Profil fotoğrafını değiştir"
+                >
+                  {isUploadingPicture ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  ) : (
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  )}
+                </label>
+                <input
+                  id="profile-picture-input"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  onChange={handlePictureChange}
+                  className="hidden"
+                  disabled={isUploadingPicture}
                 />
               </div>
               <div>

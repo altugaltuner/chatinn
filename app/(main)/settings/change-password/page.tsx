@@ -1,15 +1,19 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function ChangePasswordPage() {
+  const { user: currentUser } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-
+  const [showCurrent1, setShowCurrent1] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
   const passwordStrength = useMemo(() => {
     let score = 0;
     if (newPassword.length >= 8) score += 1;
@@ -24,26 +28,58 @@ export default function ChangePasswordPage() {
     switch (passwordStrength) {
       case 0:
       case 1:
-        return { text: "Çok zayıf", color: "#ef4444" };
+        return { color: "#ef4444" };
       case 2:
-        return { text: "Zayıf", color: "#f59e0b" };
+        return { color: "#f59e0b" };
       case 3:
-        return { text: "Orta", color: "#10b981" };
+        return { color: "#10b981" };
       case 4:
-        return { text: "Güçlü", color: "#059669" };
+        return { color: "#059669" };
       case 5:
-        return { text: "Çok güçlü", color: "#047857" };
+        return { color: "#047857" };
       default:
-        return { text: "", color: "#e5e7eb" };
+        return { color: "#e5e7eb" };
     }
   }, [passwordStrength]);
 
   const isMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword;
 
-  const onSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
+  const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    console.log(currentPassword, newPassword, confirmPassword);
-    // Sadece UI: burada henüz gerçek işlem yok.
+    setError("");
+    setSuccess(false);
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:3001/api/auth/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ currentPassword, newPassword, userId: currentUser?.id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Bir hata oluştu");
+        setSuccess(false);
+      } else {
+        setSuccess(true);
+        setError("");
+        // Formu temizle
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        // 3 saniye sonra başarı mesajını gizle
+        setTimeout(() => setSuccess(false), 3000);
+      }
+    } catch (err) {
+      setError("Bağlantı hatası oluştu");
+      setSuccess(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -94,7 +130,7 @@ export default function ChangePasswordPage() {
                 placeholder="Yeni şifreniz"
                 autoComplete="new-password"
                 required
-                minLength={8}
+                minLength={6}
               />
               <button
                 type="button"
@@ -125,7 +161,7 @@ export default function ChangePasswordPage() {
             </label>
             <div className="relative">
               <input
-                type={showConfirm ? "text" : "password"}
+                type={showCurrent1 ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={`w-full rounded-lg border px-3 py-2 pr-12 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 ${
@@ -134,15 +170,15 @@ export default function ChangePasswordPage() {
                 placeholder="Yeni şifrenizi tekrar girin"
                 autoComplete="new-password"
                 required
-                minLength={8}
+                minLength={6}
               />
               <button
                 type="button"
-                onClick={() => setShowConfirm((s) => !s)}
+                onClick={() => setShowCurrent1((s) => !s)}
                 className="absolute inset-y-0 right-0 px-3 text-sm text-gray-600 hover:text-gray-900"
                 aria-label="Yeni şifre tekrarını göster/gizle"
               >
-                {showConfirm ? "Gizle" : "Göster"}
+                {showCurrent1 ? "Gizle" : "Göster"}
               </button>
             </div>
             {isMismatch && (
@@ -165,11 +201,16 @@ export default function ChangePasswordPage() {
             <button
               type="submit"
               className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-50"
-              disabled={!currentPassword || !newPassword || !confirmPassword || isMismatch}
+              disabled={!currentPassword || !newPassword || !confirmPassword || isMismatch || loading}
             >
-              Şifreyi Güncelle
+              {loading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
             </button>
           </div>
+
+          {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+          {success && (
+            <p className="text-green-600 text-sm mt-2">Şifre başarıyla değiştirildi!</p>
+          )}
         </form>
       </div>
     </div>

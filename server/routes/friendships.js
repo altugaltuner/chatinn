@@ -261,7 +261,7 @@ router.put("/reject/:userId/:friendId", async (req, res) => {
   }
 });
 
-
+// Belirli bir kullanıcının başka bir kullanıcıya arkadaş mı olduğunu kontrol et
 router.get("/isFriend/:userId/:friendId", async (req, res) => {
   const {userId, friendId} = req.params;
   try {

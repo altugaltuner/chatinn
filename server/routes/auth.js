@@ -84,4 +84,167 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+router.post("/change-password", async (req, res) => {
+  try {
+    const { currentPassword, newPassword, userId } = req.body;
+
+    if (!currentPassword || !newPassword || !userId) {
+      return res.status(400).json({ error: "Tüm alanlar gereklidir" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "Yeni şifre en az 6 karakter olmalıdır" });
+    }
+
+    // Kullanıcıyı veritabanından al
+    const result = await db.query("SELECT * FROM users WHERE id = $1", [userId]);
+    const user = result.rows[0];
+    console.log(user, "user");
+    console.log(result, "result");
+    // Result {
+    //   command: 'SELECT',
+    //   rowCount: 1,
+    //   oid: null,
+    //   rows: [
+    //     {
+    //       id: 8,
+    //       name: 'altug',
+    //       password: 'alalalal',
+    //       picture: null,
+    //       created_at: 2025-10-29T19:37:06.121Z,
+    //       last_seen: 2025-11-05T13:23:37.367Z,
+    //       is_online: true,
+    //       bio: 'uıı8888'
+    //     }
+    //   ],
+    //   fields: [
+    //     Field {
+    //       name: 'id',
+    //       tableID: 16582,
+    //       columnID: 1,
+    //       dataTypeID: 23,
+    //       dataTypeSize: 4,
+    //       dataTypeModifier: -1,
+    //       format: 'text'
+    //     },
+    //     Field {
+    //       name: 'name',
+    //       tableID: 16582,
+    //       columnID: 2,
+    //       dataTypeID: 1043,
+    //       dataTypeSize: -1,
+    //       dataTypeModifier: 259,
+    //       format: 'text'
+    //     },
+    //     Field {
+    //       name: 'password',
+    //       tableID: 16582,
+    //       columnID: 3,
+    //       dataTypeID: 1043,
+    //       dataTypeSize: -1,
+    //       dataTypeModifier: 259,
+    //       format: 'text'
+    //     },
+    //     Field {
+    //       name: 'picture',
+    //       tableID: 16582,
+    //       columnID: 4,
+    //       dataTypeID: 1043,
+    //       dataTypeSize: -1,
+    //       dataTypeModifier: 504,
+    //       format: 'text'
+    //     },
+    //     Field {
+    //       name: 'created_at',
+    //       tableID: 16582,
+    //       columnID: 5,
+    //       dataTypeID: 1114,
+    //       dataTypeSize: 8,
+    //       dataTypeModifier: -1,
+    //       format: 'text'
+    //     },
+    //     Field {
+    //       name: 'last_seen',
+    //       tableID: 16582,
+    //       columnID: 6,
+    //       dataTypeID: 1114,
+    //       dataTypeSize: 8,
+    //       dataTypeModifier: -1,
+    //       format: 'text'
+    //     },
+    //     Field {
+    //       name: 'is_online',
+    //       tableID: 16582,
+    //       columnID: 7,
+    //       dataTypeID: 16,
+    //       dataTypeSize: 1,
+    //       dataTypeModifier: -1,
+    //       format: 'text'
+    //     },
+    //     Field {
+    //       name: 'bio',
+    //       tableID: 16582,
+    //       columnID: 8,
+    //       dataTypeID: 25,
+    //       dataTypeSize: -1,
+    //       dataTypeModifier: -1,
+    //       format: 'text'
+    //     }
+    //   ],
+    //   _parsers: [
+    //     [Function: parseInteger],
+    //     [Function: noParse],
+    //     [Function: noParse],
+    //     [Function: noParse],
+    //     [Function: parseDate],
+    //     [Function: parseDate],
+    //     [Function: parseBool],
+    //     [Function: noParse]
+    //   ],
+    //   _types: TypeOverrides {
+    //     _types: {
+    //       getTypeParser: [Function: getTypeParser],
+    //       setTypeParser: [Function: setTypeParser],
+    //       arrayParser: [Object],
+    //       builtins: [Object]
+    //     },
+    //     text: {},
+    //     binary: {}
+    //   },
+    //   RowCtor: null,
+    //   rowAsArray: false,
+    //   _prebuiltEmptyResultObject: {
+    //     id: null,
+    //     name: null,
+    //     password: null,
+    //     picture: null,
+    //     created_at: null,
+    //     last_seen: null,
+    //     is_online: null,
+    //     bio: null
+    //   }
+    // } result
+    
+
+    if (!user) {
+      return res.status(401).json({ error: "Kullanıcı bulunamadı" });
+    }
+
+    // Mevcut şifre kontrolü
+    if (user.password !== currentPassword) {
+      return res.status(401).json({ error: "Mevcut şifre hatalı" });
+    }
+
+    // Yeni şifreyi güncelle
+    await db.query("UPDATE users SET password = $1 WHERE id = $2", [newPassword, userId]);
+
+    res.json({
+      success: true,
+      message: "Şifre başarıyla değiştirildi",
+    });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({ error: "Şifre değiştirme sırasında bir hata oluştu" });
+  }
+});
 module.exports = router;
