@@ -14,13 +14,94 @@ type User = {
   is_online?: boolean;
 };
 
-type FriendshipStatus = "accepted" | "pending" | "rejected" | "none";
+type FriendshipStatus = "accepted" | "pending" | "rejected" | "none" | "banned";
+type FriendshipAction = "add" | "remove" | "block" | "unblock";
 
 export default function PeoplePage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [friendshipStatuses, setFriendshipStatuses] = useState<Record<number, FriendshipStatus>>({});
   const { user: currentUser } = useAuth();
+
+
+  // Arkadaşlık işlemleri, burada fazladan yazdım delete, banned gibi işlemleri. Oysa tek buton bütün bunlar için
+  //yetersiz
+  const handleFriendshipAction = async (friendId: number, action: FriendshipAction) => {
+    if (!currentUser?.id) {
+      console.log("No current user ID; action aborted.");
+      return;
+    }
+
+    try {
+      if (action === "add") {
+        console.log(`Adding friend: currentUser.id=${currentUser.id}, friendId=${friendId}`);
+        const response = await fetch("http://localhost:3001/api/friendships", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: currentUser.id, friend_id: friendId }),
+        });
+
+        if (response.ok) {
+          console.log("Friend add request sent successfully.");
+          // Durumu "pending" olarak güncelle
+          setFriendshipStatuses((prev) => ({
+            ...prev,
+            [friendId]: "pending",
+          }));
+        }
+      } else if (action === "remove") { 
+        console.log(`Removing friend: currentUser.id=${currentUser.id}, friendId=${friendId}`);
+        const response = await fetch(`http://localhost:3001/api/friendships/${currentUser.id}/${friendId}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          console.log("Friend remove request sent successfully.");
+          // Durumu "none" olarak güncelle
+          setFriendshipStatuses((prev) => ({
+            ...prev,
+            [friendId]: "none",
+          }));
+        }
+      } else if (action === "block") {
+        console.log(`Blocking user: currentUser.id=${currentUser.id}, friendId=${friendId}`);
+        const response = await fetch(`http://localhost:3001/api/friendships/${currentUser.id}/${friendId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "banned" }),
+        });
+
+        if (response.ok) {
+          console.log("Block request sent successfully.");
+          // Durumu "banned" olarak güncelle
+          setFriendshipStatuses((prev) => ({
+            ...prev,
+            [friendId]: "banned",
+          }));
+        }
+      } else if (action === "unblock") {
+        console.log(`Unblocking user: currentUser.id=${currentUser.id}, friendId=${friendId}`);
+        const response = await fetch(`http://localhost:3001/api/friendships/${currentUser.id}/${friendId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "none" }),
+        });
+
+        if (response.ok) {
+          console.log("Unblock request sent successfully.");
+          // Durumu "none" olarak güncelle
+          setFriendshipStatuses((prev) => ({
+            ...prev,
+            [friendId]: "none",
+          }));
+        }
+      } else {
+        console.log(`Unknown friendship action: ${action}`);
+      }
+    } catch (error) {
+      console.error("Friendship action failed:", error);
+    }
+  };
 
   // Arkadaşlık durumunu kontrol et
   const checkFriendshipStatus = async (friendId: number) => {
@@ -66,15 +147,6 @@ export default function PeoplePage() {
   };
 
   useEffect(() => {
-    if (!currentUser?.id) return;
-    fetch(`http://localhost:3001/api/user/${currentUser.id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setUsers(data);
-      });
-  }, [currentUser?.id]);
-
-  useEffect(() => {
     if (users.length > 0) return;
     fetch("http://localhost:3001/api/users")
       .then((res) => res.json())
@@ -99,6 +171,7 @@ export default function PeoplePage() {
         checkFriendshipStatus(user.id);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users, currentUser?.id]);
 
 
@@ -170,6 +243,7 @@ if (loading) {
                 </button>
                 <button
                   disabled={isButtonDisabled(friendshipStatuses[p.id])}
+                  onClick={() => handleFriendshipAction(p.id,"add")}
                   className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isButtonDisabled(friendshipStatuses[p.id])
                       ? "bg-gray-400 dark:bg-gray-600 text-white dark:text-gray-300 cursor-not-allowed"
