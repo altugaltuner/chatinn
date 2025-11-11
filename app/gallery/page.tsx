@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { Clock, Filter, Heart, Palette, Share2, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
@@ -12,8 +12,8 @@ type Design = {
   description: string;
   likes: number;
   createdAt: string;
-  labels: string[];
-  coverClass: string;
+  labels: string[] | string;
+  url: string;
 };
 
 const designs: Design[] = [
@@ -26,7 +26,7 @@ const designs: Design[] = [
     likes: 184,
     createdAt: "2 saat önce",
     labels: ["Işık", "Soyut", "Gece"],
-    coverClass:
+    url:
       "bg-gradient-to-br from-sky-300 via-emerald-200 to-purple-400 text-slate-900",
   },
   {
@@ -38,7 +38,7 @@ const designs: Design[] = [
     likes: 129,
     createdAt: "Dün",
     labels: ["Pixi", "Pattern", "Bahar"],
-    coverClass:
+    url:
       "bg-gradient-to-br from-pink-500 via-rose-400 to-amber-300 text-slate-50",
   },
   {
@@ -50,7 +50,7 @@ const designs: Design[] = [
     likes: 92,
     createdAt: "3 gün önce",
     labels: ["Minimal", "Pastel", "Çizgisel"],
-    coverClass:
+    url:
       "bg-gradient-to-br from-slate-200 via-sky-100 to-emerald-200 text-slate-900",
   },
   {
@@ -62,7 +62,7 @@ const designs: Design[] = [
     likes: 211,
     createdAt: "1 hafta önce",
     labels: ["Neon", "Kontrast", "Future"],
-    coverClass:
+    url:
       "bg-gradient-to-br from-slate-900 via-fuchsia-700 to-indigo-600 text-slate-100",
   },
   {
@@ -74,7 +74,7 @@ const designs: Design[] = [
     likes: 76,
     createdAt: "10 gün önce",
     labels: ["Galaksi", "Serbest", "Enerjik"],
-    coverClass:
+    url:
       "bg-gradient-to-br from-indigo-500 via-cyan-400 to-slate-200 text-slate-900",
   },
   {
@@ -86,7 +86,7 @@ const designs: Design[] = [
     likes: 58,
     createdAt: "Geçen ay",
     labels: ["Geometrik", "Poster", "Gradient"],
-    coverClass:
+    url:
       "bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 text-slate-950",
   },
 ];
@@ -103,18 +103,78 @@ export default function GalleryPage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [myDrawings, setMyDrawings] = useState<Design[]>([]);
   const { user: currentUser } = useAuth();
-  const getMyDrawings = async (userId: string) => {
-    setSelectedTag("my_drawings")
-    const response = await fetch("http://localhost:3001/api/user_drawings");
-    const data = await response.json();
-    console.log("data:", data);
-    setMyDrawings(data.data);
+  const [allDrawings, setAllDrawings] = useState<Design[]>([]);
+
+  const getAllDrawings = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/api/user_drawings");
+      const data = await response.json();
+      console.log("Backend'den gelen data:", data);
+      
+      if (data.success && data.data) {
+        // Backend'den gelen veriyi Design tipine map'le
+        const mappedDrawings: Design[] = data.data.map((drawing: any) => ({
+          id: drawing.id?.toString() ?? crypto.randomUUID(),
+          title: drawing.title ?? "İsimsiz Çizim",
+          user_id: drawing.user_id?.toString() ?? "Bilinmeyen",
+          description: drawing.description ?? "",
+          likes: drawing.likes ?? 0,
+          createdAt: drawing.created_at ?? new Date().toISOString(),
+          labels: drawing.labels ?? "",
+          url: drawing.url ?? ""
+        }));
+        
+        setAllDrawings(mappedDrawings);
+        console.log("✅ Tüm çizimler yüklendi:", mappedDrawings.length);
+      }
+    } catch (error) {
+      console.error("❌ Tüm çizimleri getirme hatası:", error);
+    }
+  };
+
+  useEffect(() => {
+    getAllDrawings();
+  }, []);
+
+  const getMyDrawings = async (currentUserId: number | undefined) => {
+    if (!currentUserId) {
+      alert("Çizimlerinizi görmek için giriş yapmalısınız!");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/user_drawings/${currentUserId}`);
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Çizimler getirilemedi");
+      }
+
+      //mappedDrawings dizisi yarattık, Design[] tipinde. data.drawings'ı map edip içindeki verileri eşleştirdik.
+      const mappedDrawings: Design[] = (data.drawings || []).map((drawing: any) => ({
+        id: drawing.id?.toString() ?? crypto.randomUUID(),
+        title: drawing.title ?? "Adsız Çizim",
+        user_id: drawing.user_id?.toString() ?? currentUserId.toString(),
+        description: drawing.description ?? "",
+        likes: drawing.likes ?? 0,
+        createdAt: drawing.created_at ?? new Date().toISOString(),
+        labels: drawing.labels ?? "",
+        url: drawing.url ?? "",
+      }));
+
+      setMyDrawings(mappedDrawings);
+      setSelectedTag("my_drawings");
+    } catch (error) {
+      console.error("❌ Çizimleri yükleme hatası:", error);
+      alert("Çizimleriniz yüklenirken bir sorun oluştu.");
+    }
   };
 
   const tags = useMemo(() => {
     const uniqueTags = new Set<string>();
     designs.forEach((design) => {
-      design.labels.forEach((label) => uniqueTags.add(label));
+      const labelArray = Array.isArray(design.labels) ? design.labels : [];
+      labelArray.forEach((label: string) => uniqueTags.add(label));
       console.log("design.labels:", design.labels);
     });
     console.log("uniqueTags:", uniqueTags);
@@ -123,8 +183,15 @@ export default function GalleryPage() {
 
   const filteredDesigns = useMemo(() => {
     if (!selectedTag) return designs;
-    return designs.filter((design) => design.labels.includes(selectedTag));
+    return designs.filter((design) => {
+      const labelArray = Array.isArray(design.labels) ? design.labels : [];
+      return labelArray.includes(selectedTag);
+    });
   }, [selectedTag]);
+
+  if(allDrawings.length === 0) {
+    return <div>Yükleniyor...</div>;
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col pb-24">
@@ -161,22 +228,20 @@ export default function GalleryPage() {
             </span>
             <button
               onClick={() => setSelectedTag(null)}
-              className={`rounded-full px-4 py-1.5 text-xs font-medium transition hover:bg-white/10 ${
-                selectedTag === null
+              className={`rounded-full px-4 py-1.5 text-xs font-medium transition hover:bg-white/10 ${selectedTag === null
                   ? "bg-white text-slate-950 shadow-lg shadow-cyan-500/40"
                   : "bg-white/10 text-slate-200"
-              }`}
+                }`}
             >
               Tümü
             </button>
 
-<button onClick={() => getMyDrawings(currentUser?.id?.toString() || "")}
-              className={`rounded-full px-4 py-1.5 text-xs font-medium transition hover:bg-white/10 ${
-                selectedTag === "my_drawings"
+            <button onClick={() => getMyDrawings(currentUser?.id)}
+              className={`rounded-full px-4 py-1.5 text-xs font-medium transition hover:bg-white/10 ${selectedTag === "my_drawings"
                   ? "bg-cyan-300 text-slate-900 shadow-lg shadow-cyan-500/40"
                   : "bg-white/10 text-slate-200"
-              }`}>Bana Ait</button>
-            
+                }`}>Bana Ait</button>
+
 
             {tags.map((tag) => (
               <button
@@ -184,11 +249,10 @@ export default function GalleryPage() {
                 onClick={() =>
                   setSelectedTag((prev) => (prev === tag ? null : tag))
                 }
-                className={`rounded-full px-4 py-1.5 text-xs font-medium transition hover:bg-white/10 ${
-                  selectedTag === tag
+                className={`rounded-full px-4 py-1.5 text-xs font-medium transition hover:bg-white/10 ${selectedTag === tag
                     ? "bg-cyan-300 text-slate-900 shadow-lg shadow-cyan-500/40"
                     : "bg-white/10 text-slate-200"
-                }`}
+                  }`}
               >
                 #{tag}
               </button>
@@ -199,75 +263,107 @@ export default function GalleryPage() {
 
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-6 pt-12 lg:px-10">
         <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {selectedTag === "my_drawings" ? myDrawings.map((design) => (
+          {selectedTag === "my_drawings" ? (
+            // Bana ait çizimler
+            myDrawings.map((drawing) => (
             <article
-              key={design.id}
+              key={drawing.id}
               className="group flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-lg transition duration-300 hover:-translate-y-1 hover:border-cyan-300/60 hover:shadow-[0_20px_60px_-25px_rgba(56,189,248,0.45)]"
             >
-              <div
-                className={`relative aspect-[4/3] w-full overflow-hidden ${design.coverClass}`}
-              >
-                <div className="absolute inset-4 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm transition duration-500 group-hover:scale-[1.02] group-hover:border-white/40 group-hover:bg-white/20" />
-          </div>
-
-          </article>
-        )) : null}
-          
-          
-          
-          
-          {filteredDesigns.map((design) => (
-            <article
-              key={design.id}
-              className="group flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-lg transition duration-300 hover:-translate-y-1 hover:border-cyan-300/60 hover:shadow-[0_20px_60px_-25px_rgba(56,189,248,0.45)]"
-            >
-              <div
-                className={`relative aspect-[4/3] w-full overflow-hidden ${design.coverClass}`}
-              >
-                <div className="absolute inset-4 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm transition duration-500 group-hover:scale-[1.02] group-hover:border-white/40 group-hover:bg-white/20" />
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-800">
+                <img 
+                  src={`http://localhost:3001${drawing.url}`} 
+                  alt={drawing.title}
+                  className="h-full w-full object-contain transition duration-500 group-hover:scale-105"
+                />
                 <div className="absolute left-5 top-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em]">
-                  <span className="rounded-full bg-white/80 px-3 py-1 text-slate-900">
-                    {design.labels[0]}
-                  </span>
-                  {design.labels[1] ? (
-                    <span className="rounded-full bg-black/40 px-3 py-1 text-white">
-                      {design.labels[1]}
+                  {drawing.labels && typeof drawing.labels === 'string' && drawing.labels.split(',').map((label: string, idx: number) => (
+                    <span key={idx} className={`rounded-full px-3 py-1 ${idx === 0 ? 'bg-white/80 text-slate-900' : 'bg-black/40 text-white'}`}>
+                      {label.trim()}
                     </span>
-                  ) : null}
+                  ))}
                 </div>
                 <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/20 bg-white/10 p-4 text-sm text-white shadow-lg shadow-black/20 backdrop-blur">
-                  <p className="font-semibold">{design.title}</p>
+                  <p className="font-semibold">{drawing.title}</p>
                   <p className="mt-2 text-[13px] text-white/80 line-clamp-2">
-                    {design.description}
+                    {drawing.description}
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-1 flex-col gap-5 px-5 pb-6 pt-5">
                 <div className="flex items-center justify-between text-sm text-slate-300">
-                  <span className="font-medium text-white">{design.user_id}</span>
+                  <span className="font-medium text-white">{drawing.title}</span>
                   <span className="flex items-center gap-1 text-xs uppercase tracking-[0.18em] text-slate-400">
                     <Clock className="h-3.5 w-3.5" />
-                    {design.createdAt}
+                    {new Date(drawing.createdAt).toLocaleDateString('tr-TR')}
                   </span>
                 </div>
-                <p className="text-sm text-slate-300">{design.description}</p>
+                <p className="text-sm text-slate-300">{drawing.description}</p>
                 <div className="mt-auto flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm font-medium text-cyan-300">
                     <Heart className="h-4 w-4 fill-cyan-300/30 text-cyan-300 transition group-hover:scale-[1.15]" />
-                    {design.likes.toLocaleString("tr-TR")}
+                    {drawing.likes || 0}
                   </div>
-                  <Link
-                    href={`/canvas?design=${design.id}`}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white hover:text-slate-950"
-                  >
+                  <button className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white hover:text-slate-950">
                     İncele
                     <Share2 className="h-3.5 w-3.5" />
-                  </Link>
+                  </button>
                 </div>
               </div>
             </article>
-          ))}
+          ))
+          ) : (
+            // Tüm çizimler (backend'den)
+            allDrawings.map((drawing) => (
+            <article
+              key={drawing.id}
+              className="group flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-lg transition duration-300 hover:-translate-y-1 hover:border-cyan-300/60 hover:shadow-[0_20px_60px_-25px_rgba(56,189,248,0.45)]"
+            >
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-800">
+                <img 
+                  src={`http://localhost:3001${drawing.url}`} 
+                  alt={drawing.title}
+                  className="h-full w-full object-contain transition duration-500 group-hover:scale-105"
+                />
+                <div className="absolute left-5 top-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em]">
+                  {drawing.labels && typeof drawing.labels === 'string' && drawing.labels.split(',').map((label: string, idx: number) => (
+                    <span key={idx} className={`rounded-full px-3 py-1 ${idx === 0 ? 'bg-white/80 text-slate-900' : 'bg-black/40 text-white'}`}>
+                      {label.trim()}
+                    </span>
+                  ))}
+                </div>
+                <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/20 bg-white/10 p-4 text-sm text-white shadow-lg shadow-black/20 backdrop-blur">
+                  <p className="font-semibold">{drawing.title}</p>
+                  <p className="mt-2 text-[13px] text-white/80 line-clamp-2">
+                    {drawing.description}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-1 flex-col gap-5 px-5 pb-6 pt-5">
+                <div className="flex items-center justify-between text-sm text-slate-300">
+                  <span className="font-medium text-white">{drawing.title}</span>
+                  <span className="flex items-center gap-1 text-xs uppercase tracking-[0.18em] text-slate-400">
+                    <Clock className="h-3.5 w-3.5" />
+                    {new Date(drawing.createdAt).toLocaleDateString('tr-TR')}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-300">{drawing.description}</p>
+                <div className="mt-auto flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium text-cyan-300">
+                    <Heart className="h-4 w-4 fill-cyan-300/30 text-cyan-300 transition group-hover:scale-[1.15]" />
+                    {drawing.likes || 0}
+                  </div>
+                  <button className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white hover:text-slate-950">
+                    İncele
+                    <Share2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))
+          )}
         </section>
 
         <aside className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-cyan-500/20 via-sky-500/10 to-indigo-500/20 px-6 py-10 text-slate-100 shadow-[0_30px_80px_-40px_rgba(79,70,229,0.55)] backdrop-blur">

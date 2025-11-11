@@ -18,7 +18,12 @@ const app = express(); // express app oluştur
 app.use(cors()); // cors policy'yi ayarla, 
 // Bu demek: "Tüm origin'lerden gelen isteklere izin ver!"
 // Yani frontend'den backend'e istek atabilirsin
-app.use(express.json()); // express app'a json verileri alabilmek için
+app.use(express.json({ limit: '50mb' })); // express app'a json verileri alabilmek için (limit artırıldı)
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Statik dosyaları sun (uploads klasörü)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+console.log("📁 Statik dosyalar sunuluyor:", path.join(__dirname, 'uploads'));
 // end line of middlewares
 
 // HTTP server oluştur (Express ile)

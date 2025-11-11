@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 type ToolId = "pencil" | "save" | "clear" | "color" | "eraser";
 
 export default function CanvasPage() {
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const currentLineRef = useRef<Graphics | null>(null);
@@ -16,6 +17,26 @@ export default function CanvasPage() {
   const [currentColor, setCurrentColor] = useState("#000000"); // Siyah
   const [brushSize, setBrushSize] = useState(3);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const backgroundRef = useRef<Graphics | null>(null);
+
+  const ensureBackground = (app: Application) => {
+    if (!backgroundRef.current) {
+      backgroundRef.current = new Graphics();
+      backgroundRef.current.eventMode = "none";
+      backgroundRef.current.zIndex = -1;
+    } else {
+      backgroundRef.current.clear();
+    }
+
+    backgroundRef.current.rect(0, 0, app.screen.width, app.screen.height);
+    backgroundRef.current.fill("#ffffff");
+    backgroundRef.current.eventMode = "none";
+    backgroundRef.current.zIndex = -1;
+
+    if (!app.stage.children.includes(backgroundRef.current)) {
+      app.stage.addChild(backgroundRef.current);
+    }
+  };
   // State'leri ref'lere de kaydet (event handler'lar için güncel değerler)
   const selectedToolRef = useRef<ToolId>(selectedTool);
   const currentColorRef = useRef(currentColor);
@@ -43,11 +64,11 @@ export default function CanvasPage() {
     // Pixi.js Application'ı oluştur ve başlat
     const initPixi = async () => {
       const app = new Application();
-      
+
       // App'i initialize et
-      await app.init({ 
+      await app.init({
         backgroundColor: "#ffffff", // Beyaz arka plan
-        width: 1000, 
+        width: 1000,
         height: 600,
         antialias: true,
       });
@@ -58,6 +79,11 @@ export default function CanvasPage() {
       // Canvas'ı interaktif yap
       app.stage.eventMode = "static";
       app.stage.hitArea = app.screen;
+      
+      app.stage.sortableChildren = true;
+
+      // Arka plan (beyaz) oluştur
+      ensureBackground(app);
 
       // Mouse/Touch event listener'ları
       app.stage.on("pointerdown", (event) => {
@@ -71,15 +97,30 @@ export default function CanvasPage() {
         const line = new Graphics();
         currentLineRef.current = line;
         app.stage.addChild(line);
+        line.zIndex = 1;
 
         // Başlangıç noktası
         const pos = event.global;
+
+        // Ref'lerden güncel renk ve kalınlık al
+        const color = currentColorRef.current;
+        const size = brushSizeRef.current;
+
+        // Silgi için beyaz renk, kalem için seçili renk
+        const drawColor = tool === "eraser" ? "#ffffff" : color;
+        const drawSize = tool === "eraser" ? size * 3 : size;
+
+        // İlk noktayı belirle ve stroke başlat
         line.moveTo(pos.x, pos.y);
+        line.circle(pos.x, pos.y, drawSize / 2);
+        line.fill(drawColor);
+
+        console.log("🖊️ Çizim başladı, stage children:", app.stage.children.length);
       });
 
       app.stage.on("pointermove", (event) => {
         if (!isDrawingRef.current || !currentLineRef.current) return;
-        
+
         // Ref'lerden güncel değerleri al
         const tool = selectedToolRef.current;
         if (tool !== "pencil" && tool !== "eraser") return;
@@ -95,10 +136,9 @@ export default function CanvasPage() {
         const drawColor = tool === "eraser" ? "#ffffff" : color;
         const drawSize = tool === "eraser" ? size * 3 : size;
 
-        // Çizgi çiz
-        currentLineRef.current
-          .lineTo(pos.x, pos.y)
-          .stroke({ width: drawSize, color: drawColor });
+        // Her hareket noktasında küçük bir daire çiz (brush effect)
+        currentLineRef.current.circle(pos.x, pos.y, drawSize / 2);
+        currentLineRef.current.fill(drawColor);
       });
 
       app.stage.on("pointerup", () => {
@@ -129,18 +169,19 @@ export default function CanvasPage() {
   // Tool fonksiyonları
   const handleClear = () => {
     if (!appRef.current) return;
-    // Tüm çizimleri temizle
+    // Tüm çizimleri temizle (background hariç)
     appRef.current.stage.removeChildren();
+    ensureBackground(appRef.current);
     console.log("Canvas temizlendi");
   };
 
   const handleSave = async () => {
     if (!appRef.current) return;
-    
+
     try {
       // Pixi.js'in extract.canvas metodunu çağırıp, mevcut sahnenin canvas'ını elde ediyoruz (kaydetmek için)
       const extractCanvas = await appRef.current.renderer.extract.canvas(appRef.current.stage);
-      
+
       // extractCanvas'ın toBlob metodunu kullanarak, canvas'ın içeriğini Blob olarak alıyoruz
       if (extractCanvas && extractCanvas.toBlob) {
         extractCanvas.toBlob((blob) => {
@@ -148,23 +189,23 @@ export default function CanvasPage() {
             console.error("Blob oluşturulamadı");
             return;
           }
-          
+
           // Blob'dan URL oluştur ve indir
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.download = `canvas-${Date.now()}.png`;
           link.href = url;
           link.click();
-          
+
           // URL'i temizle (memory leak önleme)
           setTimeout(() => URL.revokeObjectURL(url), 100);
-          
+
           console.log("✅ Canvas başarıyla kaydedildi!");
         }, "image/png");
       } else {
         console.error("Canvas toBlob metodu desteklenmiyor");
       }
-      
+
     } catch (error) {
       console.error("❌ Canvas kaydetme hatası:", error);
       alert("Canvas kaydedilemedi!");
@@ -173,13 +214,13 @@ export default function CanvasPage() {
 
   const handleToolClick = (toolId: ToolId) => {
     setSelectedTool(toolId);
-    
+
     if (toolId === "clear") {
       handleClear();
     } else if (toolId === "save") {
       handleSave();
     }
-    
+
     console.log(`${toolId} seçildi`);
   };
 
@@ -206,11 +247,38 @@ export default function CanvasPage() {
     }
 
     try {
+      // Stage'de çizim var mı kontrol et
+      const stageChildren = appRef.current.stage.children.filter(
+        (child) => child !== backgroundRef.current
+      );
+      console.log("🎨 Stage bilgileri:");
+      console.log("  - Çocuk sayısı (arka plan hariç):", stageChildren.length);
+      console.log("  - Renderer tipi:", appRef.current.renderer.type);
+
+      // Eğer hiç çizim yoksa uyar
+      if (stageChildren.length === 0) {
+        alert("Canvas'ta henüz hiçbir şey çizmediniz!");
+        return;
+      }
+
+      // Pixi stage'inden resim çıkart
       const extractCanvas = await appRef.current.renderer.extract.canvas(appRef.current.stage);
 
+      //extractCanvas değişkeninin gerçekten bir HTMLCanvasElement olup olmadığını kontrol ediyor. 
+      // Pixi’nin renderer.extract.canvas(...) metodu normalde bir canvas döndürmeli, ama beklenmedik bir
+      //  durumda null, undefined ya da farklı türde bir obje dönebilir. instanceof HTMLCanvasElement koşulu 
+      // bu kontrolü yapıp güvence sağlıyor.
       if (!(extractCanvas instanceof HTMLCanvasElement)) {
         throw new Error("Canvas verisi alınamadı");
       }
+
+
+      //extractCanvas gerçek bir HTMLCanvasElement olduğu için, burada toDataURL("image/png") metodunu çağırıyoruz. 
+      // Bu metodun yaptığı: Canvas üzerinde çizilmiş olan tüm piksel verisini okuyor.
+      // Bu veriyi seçtiğin formata göre ("image/png") sıkıştırıp dönüştürüyor.
+      // Sonuçta data:image/png;base64,iVBORw0KGgo... şeklinde bir Base64 kodlu string üretiyor.
+      // Biz de bu Base64 stringi dataUrl değişkeninde tutup backend’e gönderiyoruz. 
+      // Sunucu bu veriyi alıp dosyaya yazdığında, tarayıcıda çizdiginiz görüntüyü yeniden oluşturabiliyoruz.
 
       const dataUrl = extractCanvas.toDataURL("image/png");
 
@@ -219,6 +287,9 @@ export default function CanvasPage() {
       console.log("  - Etiketler:", tags);
       console.log("  - Açıklama:", description.substring(0, 50) + "...");
       console.log("  - Kullanıcı ID:", currentUser?.id);
+      console.log("  - Canvas boyutu:", extractCanvas.width, "x", extractCanvas.height);
+      console.log("  - DataURL uzunluğu:", dataUrl.length);
+      console.log("  - DataURL başlangıcı:", dataUrl.substring(0, 100));
 
       const response = await fetch("http://localhost:3001/api/user_drawings", {
         method: "POST",
@@ -229,7 +300,7 @@ export default function CanvasPage() {
           title: drawName,
           labels: tags,
           description: description,
-          url: dataUrl,
+          imageData: dataUrl,
           user_id: currentUser?.id,
         }),
       });
@@ -241,7 +312,7 @@ export default function CanvasPage() {
 
       const data = await response.json();
       console.log("✅ Sunucu yanıtı:", data);
-      
+
       if (data.success) {
         alert(`✅ "${drawName}" başarıyla kaydedildi! Galeri sayfanızda görüntüleyebilirsiniz.`);
         // Formu temizle
@@ -363,16 +434,15 @@ export default function CanvasPage() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
           Canvas - Çizim Yap
         </h1>
-        
+
         {/* Tool Bar */}
         <div className="flex gap-3 items-center justify-center mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
           {/* Pencil */}
           <button
-            className={`p-3 rounded-lg transition-all ${
-              selectedTool === "pencil"
+            className={`p-3 rounded-lg transition-all ${selectedTool === "pencil"
                 ? "bg-blue-600 text-white shadow-lg scale-110"
                 : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-            }`}
+              }`}
             onClick={() => handleToolClick("pencil")}
             title="Kalem"
           >
@@ -381,11 +451,10 @@ export default function CanvasPage() {
 
           {/* Eraser */}
           <button
-            className={`p-3 rounded-lg transition-all ${
-              selectedTool === "eraser"
+            className={`p-3 rounded-lg transition-all ${selectedTool === "eraser"
                 ? "bg-blue-600 text-white shadow-lg scale-110"
                 : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-            }`}
+              }`}
             onClick={() => handleToolClick("eraser")}
             title="Silgi"
           >
@@ -446,20 +515,20 @@ export default function CanvasPage() {
         </div>
 
         {/* Pixi canvas buraya eklenecek */}
-        <div 
-          ref={containerRef} 
+        <div
+          ref={containerRef}
           className="border-4 border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden shadow-lg bg-white cursor-crosshair w-[900px] h-[600px]"
         />
 
         {/* Info */}
         <div className="flex justify-between items-center gap-2">
-        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p className="text-sm text-blue-800 dark:text-blue-300">
-            💡 <strong>Kullanım:</strong> Kalem seçili, mouse ile canvas üzerinde çizim yapabilirsin!
-          </p>
-        </div>
-         {/* Save */}
-         <button
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <p className="text-sm text-blue-800 dark:text-blue-300">
+              💡 <strong>Kullanım:</strong> Kalem seçili, mouse ile canvas üzerinde çizim yapabilirsin!
+            </p>
+          </div>
+          {/* Save */}
+          <button
             className="p-3 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-all"
             onClick={openSaveModal}
             title="Çizim Olarak Kaydet"
