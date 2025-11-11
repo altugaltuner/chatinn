@@ -119,6 +119,7 @@ const authRouter = require("./routes/auth.js"); // Authentication route
 const friendshipsRouter = require("./routes/friendships.js"); // Friendships route
 const messagesRouter = require("./routes/messages.js"); // Messages route
 const db = require("./db"); // Database connection
+const userDrawingsRouter = require("./routes/user_drawings.js");
 
 app.use("/api/auth", authRouter); // Authentication: http://localhost:3001/api/auth/signin, /signup
 app.use("/api/messages", messagesRouter); // Messages: http://localhost:3001/api/messages
@@ -129,3 +130,4 @@ app.use("/api/public-groups", publicGroupsRouter);
 app.use("/api/groups", groupsRouter);
 app.use("/api/friendships", friendshipsRouter); // Friendships: http://localhost:3001/api/friendships
 app.use("/api/myfriends", friendshipsRouter);
+app.use("/api/user_drawings", userDrawingsRouter); // User drawings: http://localhost:3001/api/user_drawings
