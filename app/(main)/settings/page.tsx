@@ -247,7 +247,7 @@ export default function SettingsPage() {
               {!isEditingAbout && (
                 <button
                   onClick={() => setIsEditingAbout(true)}
-                  className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
                   title="Düzenle"
                 >
                   <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,13 +273,13 @@ export default function SettingsPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveAbout}
-                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium cursor-pointer"
                   >
                     Kaydet
                   </button>
                   <button
                     onClick={handleCancelAbout}
-                    className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors font-medium"
+                    className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors font-medium cursor-pointer"
                   >
                     İptal
                   </button>
@@ -368,7 +368,7 @@ export default function SettingsPage() {
           </h2>
 
           <div className="space-y-3">
-            <button onClick={ChangePassword} className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
+            <button onClick={ChangePassword} className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between cursor-pointer">
               <span className="text-gray-900 dark:text-white">Şifremi Değiştir</span>
               <svg
                 className="w-5 h-5 text-gray-400"
@@ -385,7 +385,7 @@ export default function SettingsPage() {
               </svg>
             </button>
 
-            <button className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
+            <button className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between cursor-pointer">
               <span className="text-gray-900 dark:text-white">Gizlilik Ayarları</span>
               <svg
                 className="w-5 h-5 text-gray-400"
@@ -402,7 +402,7 @@ export default function SettingsPage() {
               </svg>
             </button>
 
-            <button className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
+            <button className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between cursor-pointer">
               <span className="text-gray-900 dark:text-white">Engellenmiş Kullanıcılar</span>
               <svg
                 className="w-5 h-5 text-gray-400"
@@ -439,7 +439,7 @@ export default function SettingsPage() {
           </p>
           <button
             onClick={handleLogout}
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold flex items-center gap-2"
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold flex items-center gap-2 cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path

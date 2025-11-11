@@ -108,7 +108,7 @@ export default function ChangePasswordPage() {
               <button
                 type="button"
                 onClick={() => setShowCurrent((s) => !s)}
-                className="absolute inset-y-0 right-0 px-3 text-sm text-gray-600 hover:text-gray-900"
+                className="absolute inset-y-0 right-0 px-3 text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
                 aria-label="Mevcut şifreyi göster/gizle"
               >
                 {showCurrent ? "Gizle" : "Göster"}
@@ -135,7 +135,7 @@ export default function ChangePasswordPage() {
               <button
                 type="button"
                 onClick={() => setShowNew((s) => !s)}
-                className="absolute inset-y-0 right-0 px-3 text-sm text-gray-600 hover:text-gray-900"
+                className="absolute inset-y-0 right-0 px-3 text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
                 aria-label="Yeni şifreyi göster/gizle"
               >
                 {showNew ? "Gizle" : "Göster"}
@@ -175,7 +175,7 @@ export default function ChangePasswordPage() {
               <button
                 type="button"
                 onClick={() => setShowCurrent1((s) => !s)}
-                className="absolute inset-y-0 right-0 px-3 text-sm text-gray-600 hover:text-gray-900"
+                className="absolute inset-y-0 right-0 px-3 text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
                 aria-label="Yeni şifre tekrarını göster/gizle"
               >
                 {showCurrent1 ? "Gizle" : "Göster"}
@@ -189,7 +189,7 @@ export default function ChangePasswordPage() {
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
-              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer"
               onClick={() => {
                 setCurrentPassword("");
                 setNewPassword("");
@@ -200,7 +200,7 @@ export default function ChangePasswordPage() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-50 cursor-pointer"
               disabled={!currentPassword || !newPassword || !confirmPassword || isMismatch || loading}
             >
               {loading ? "Güncelleniyor..." : "Şifreyi Güncelle"}

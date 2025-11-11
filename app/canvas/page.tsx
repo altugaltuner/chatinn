@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 type ToolId = "pencil" | "save" | "clear" | "color" | "eraser";
 
 export default function CanvasPage() {
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const currentLineRef = useRef<Graphics | null>(null);
@@ -354,7 +354,7 @@ export default function CanvasPage() {
               </div>
               <button
                 type="button"
-                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:text-gray-500 dark:hover:bg-slate-800 dark:hover:text-gray-200"
+                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:text-gray-500 dark:hover:bg-slate-800 dark:hover:text-gray-200 cursor-pointer"
                 onClick={closeSaveModal}
                 aria-label="Kaydetme penceresini kapat"
               >
@@ -410,14 +410,14 @@ export default function CanvasPage() {
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
                 <button
                   type="button"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-slate-700 dark:text-gray-200 dark:hover:bg-slate-800"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-slate-700 dark:text-gray-200 dark:hover:bg-slate-800 cursor-pointer"
                   onClick={closeSaveModal}
                 >
                   Vazgeç
                 </button>
                 <button
                   type="button"
-                  className="w-full rounded-xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+                  className="w-full rounded-xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-blue-400/40 cursor-pointer"
                   onClick={async () => {
                     await handleSaveAsDrawings();
                     closeSaveModal();
@@ -439,7 +439,7 @@ export default function CanvasPage() {
         <div className="flex gap-3 items-center justify-center mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
           {/* Pencil */}
           <button
-            className={`p-3 rounded-lg transition-all ${selectedTool === "pencil"
+            className={`p-3 rounded-lg transition-all cursor-pointer ${selectedTool === "pencil"
                 ? "bg-blue-600 text-white shadow-lg scale-110"
                 : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
               }`}
@@ -451,7 +451,7 @@ export default function CanvasPage() {
 
           {/* Eraser */}
           <button
-            className={`p-3 rounded-lg transition-all ${selectedTool === "eraser"
+            className={`p-3 rounded-lg transition-all cursor-pointer ${selectedTool === "eraser"
                 ? "bg-blue-600 text-white shadow-lg scale-110"
                 : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
               }`}
@@ -497,7 +497,7 @@ export default function CanvasPage() {
 
           {/* Clear */}
           <button
-            className="p-3 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all"
+            className="p-3 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all cursor-pointer"
             onClick={() => handleToolClick("clear")}
             title="Temizle"
           >
@@ -506,7 +506,7 @@ export default function CanvasPage() {
 
           {/* Save */}
           <button
-            className="p-3 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-all"
+            className="p-3 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-all cursor-pointer"
             onClick={() => handleToolClick("save")}
             title="Kaydet"
           >
@@ -529,7 +529,7 @@ export default function CanvasPage() {
           </div>
           {/* Save */}
           <button
-            className="p-3 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-all"
+            className="p-3 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-all cursor-pointer"
             onClick={openSaveModal}
             title="Çizim Olarak Kaydet"
           >

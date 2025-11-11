@@ -228,7 +228,7 @@ export default function GalleryPage() {
             </span>
             <button
               onClick={() => setSelectedTag(null)}
-              className={`rounded-full px-4 py-1.5 text-xs font-medium transition hover:bg-white/10 ${selectedTag === null
+              className={`rounded-full cursor-pointer px-4 py-1.5 text-xs font-medium transition hover:bg-white/10 ${selectedTag === null
                   ? "bg-white text-slate-950 shadow-lg shadow-cyan-500/40"
                   : "bg-white/10 text-slate-200"
                 }`}
@@ -237,7 +237,7 @@ export default function GalleryPage() {
             </button>
 
             <button onClick={() => getMyDrawings(currentUser?.id)}
-              className={`rounded-full px-4 py-1.5 text-xs font-medium transition hover:bg-white/10 ${selectedTag === "my_drawings"
+              className={`rounded-full px-4 cursor-pointer py-1.5 text-xs font-medium transition hover:bg-white/10 ${selectedTag === "my_drawings"
                   ? "bg-cyan-300 text-slate-900 shadow-lg shadow-cyan-500/40"
                   : "bg-white/10 text-slate-200"
                 }`}>Bana Ait</button>

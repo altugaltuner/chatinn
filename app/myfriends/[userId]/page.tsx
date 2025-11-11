@@ -206,7 +206,7 @@ export default function MyFriendsPage({ params }: { params: Promise<{ userId: st
               <div className="relative notification-dropdown">
                 <button
                   onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                  className="relative w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="relative w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer"
                 >
                   {/* Çan İkonu */}
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +275,7 @@ export default function MyFriendsPage({ params }: { params: Promise<{ userId: st
                                   onClick={() =>
                                     handleAcceptRequest(request.user_id, request.friend_id)
                                   }
-                                  className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                                  className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors cursor-pointer"
                                   title="Kabul Et"
                                 >
                                   <svg
@@ -296,7 +296,7 @@ export default function MyFriendsPage({ params }: { params: Promise<{ userId: st
                                   onClick={() =>
                                     handleRejectRequest(request.user_id, request.friend_id)
                                   }
-                                  className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                                  className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors cursor-pointer"
                                   title="Reddet"
                                 >
                                   <svg
@@ -361,7 +361,7 @@ export default function MyFriendsPage({ params }: { params: Promise<{ userId: st
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
-                  <button onClick={() => routeToChat(friend.id)} className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg transition-colors font-medium text-sm">
+                  <button onClick={() => routeToChat(friend.id)} className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg transition-colors font-medium text-sm cursor-pointer">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"

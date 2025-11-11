@@ -239,7 +239,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupsId: stri
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-4 justify-center mb-8">
-                <button onClick={handleJoinGroup} className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
+                <button onClick={handleJoinGroup} className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105 cursor-pointer">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -349,7 +349,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupsId: stri
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">{group.name}</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">{group.description}</p>
           </div>
-          <button className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors">
+          <button className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors cursor-pointer">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
@@ -418,7 +418,7 @@ export default function GroupPage({ params }: { params: Promise<{ groupsId: stri
               placeholder="Mesaj yazın..."
               className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
             />
-            <button className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors">
+            <button className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors cursor-pointer">
               Gönder
             </button>
           </div>

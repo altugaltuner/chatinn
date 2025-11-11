@@ -130,7 +130,7 @@ export default function GroupsPage() {
         <div className="relative notification-dropdown">
           <button
             onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-            className="relative w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="relative w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer"
           >
             {/* Çan İkonu */}
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,7 +200,7 @@ export default function GroupsPage() {
                             onClick={() =>
                               handleAcceptGroupRequest(request.group_id, request.user_id)
                             }
-                            className="flex-1 p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-medium"
+                            className="flex-1 p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-medium cursor-pointer"
                           >
                             ✓ Kabul Et
                           </button>
@@ -208,7 +208,7 @@ export default function GroupsPage() {
                             onClick={() =>
                               handleRejectGroupRequest(request.group_id, request.user_id)
                             }
-                            className="flex-1 p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm font-medium"
+                            className="flex-1 p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm font-medium cursor-pointer"
                           >
                             ✗ Reddet
                           </button>

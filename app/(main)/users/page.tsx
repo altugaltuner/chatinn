@@ -73,7 +73,7 @@ export default function UsersPage() {
               <p className="text-sm text-slate-500 mb-3 truncate">{user.email}</p>
 
               {/* Action Button */}
-              <button className="mt-4 w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+              <button className="mt-4 w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 cursor-pointer">
                 <Link href={`/user/${user.id}`}>Profili Gör</Link>
               </button>
             </div>

@@ -238,13 +238,13 @@ if (loading) {
               </div>
 
               <div className="px-5 pb-5 flex items-center gap-2">
-                <button className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium">
+                <button className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium cursor-pointer">
                   Mesaj At
                 </button>
                 <button
                   disabled={isButtonDisabled(friendshipStatuses[p.id])}
                   onClick={() => handleFriendshipAction(p.id,"add")}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                     isButtonDisabled(friendshipStatuses[p.id])
                       ? "bg-gray-400 dark:bg-gray-600 text-white dark:text-gray-300 cursor-not-allowed"
                       : "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-black dark:hover:bg-white"

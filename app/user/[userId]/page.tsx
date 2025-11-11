@@ -194,7 +194,7 @@ useEffect(() => {
                 {!isFriendWithMe && (<button
                   onClick={handleAddFriend}
                   disabled={sendingRequest || friendRequestSent}
-                  className={`flex items-center gap-2 font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none ${
+                  className={`flex items-center gap-2 font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none cursor-pointer ${
                     friendRequestSent
                       ? "bg-green-600 text-white"
                       : "bg-black dark:bg-white text-white dark:text-black"
@@ -255,7 +255,7 @@ useEffect(() => {
                 </button>)}
                 
 
-                <button onClick={routeToChat} className="flex items-center gap-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105">
+                <button onClick={routeToChat} className="flex items-center gap-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:scale-105 cursor-pointer">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"

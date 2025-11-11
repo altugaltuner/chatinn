@@ -43,13 +43,13 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={() => router.push("/signup")}
-                className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer"
               >
                 Hemen Başla
               </button>
               <button
                 onClick={() => router.push("/signin")}
-                className="px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-semibold text-lg transition-all border-2 border-gray-200 dark:border-gray-700"
+                className="px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-semibold text-lg transition-all border-2 border-gray-200 dark:border-gray-700 cursor-pointer"
               >
                 Giriş Yap
               </button>

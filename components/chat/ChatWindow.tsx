@@ -218,7 +218,7 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => getCopy()}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 text-white text-sm font-medium px-3 py-2 shadow-sm hover:bg-indigo-700 active:bg-indigo-800 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 text-white text-sm font-medium px-3 py-2 shadow-sm hover:bg-indigo-700 active:bg-indigo-800 transition-colors cursor-pointer"
               title="Mesajları indir"
             >
               <ClipboardIcon className="w-4 h-4" />
@@ -278,7 +278,7 @@ export default function ChatWindow({ chatId }: { chatId: string }) {
           />
           <button
             onClick={handleSend}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
           >
             Gönder
           </button>
