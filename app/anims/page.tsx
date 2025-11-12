@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Play, Pause, RotateCcw } from "lucide-react";
+import { fadeFunction } from "@/components/animations/fade";
 
 type Animation = {
   id: string;
@@ -14,20 +15,31 @@ const animations: Animation[] = [
   { id: "1", name: "Fade In", thumbnail: "🌟", color: "from-blue-400 to-blue-600" },
   { id: "2", name: "Slide Left", thumbnail: "⬅️", color: "from-purple-400 to-purple-600" },
   { id: "3", name: "Slide Right", thumbnail: "➡️", color: "from-pink-400 to-pink-600" },
-  { id: "4", name: "Bounce", thumbnail: "🎾", color: "from-green-400 to-green-600" },
-  { id: "5", name: "Rotate", thumbnail: "🔄", color: "from-orange-400 to-orange-600" },
-  { id: "6", name: "Scale Up", thumbnail: "📈", color: "from-red-400 to-red-600" },
-  { id: "7", name: "Shake", thumbnail: "📳", color: "from-yellow-400 to-yellow-600" },
-  { id: "8", name: "Flip", thumbnail: "🔃", color: "from-cyan-400 to-cyan-600" },
-  { id: "9", name: "Wave", thumbnail: "🌊", color: "from-indigo-400 to-indigo-600" },
-  { id: "10", name: "Pulse", thumbnail: "💓", color: "from-rose-400 to-rose-600" },
-  { id: "11", name: "Pixel", thumbnail: "🔳", color: "from-gray-400 to-gray-600" },
-  
+
+
 ];
 
 export default function AnimsPage() {
   const [selectedAnim, setSelectedAnim] = useState<Animation | null>(animations[0]);
   const [isPlaying, setIsPlaying] = useState(false);
+
+ 
+  const startAnimation = () => {
+    if (!selectedAnim ) return;
+    switch (selectedAnim?.id) {
+      case "1":
+        fadeFunction();
+        break;
+      case "2":
+        break;
+      case "3":
+        break;
+    }
+  } 
+  useEffect(() => {
+    startAnimation();
+  }, [selectedAnim]);
+  
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col overflow-hidden">
@@ -39,11 +51,14 @@ export default function AnimsPage() {
             {/* Grid Pattern Background */}
             <div className="absolute inset-0 opacity-10">
               <div className="grid grid-cols-12 grid-rows-6 h-full w-full">
-                {Array.from({ length: 72 }).map((_, i) => (
-                  <div key={i} className="border border-slate-500" />
-                ))}
               </div>
             </div>
+
+            {/* Animation Container */}
+            {selectedAnim && selectedAnim.id === "1" && (
+              <div id="fade-container" className="absolute inset-0 w-full h-full">
+              </div>
+            )}
 
             {/* Animation Preview Element */}
             {selectedAnim && (
@@ -79,11 +94,10 @@ export default function AnimsPage() {
             <button
               onClick={() => setIsPlaying(!isPlaying)}
               disabled={!selectedAnim}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                selectedAnim
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${selectedAnim
                   ? "bg-blue-500/90 backdrop-blur text-white hover:bg-blue-600 shadow-lg"
                   : "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-              }`}
+                }`}
             >
               {isPlaying ? (
                 <>
@@ -101,11 +115,10 @@ export default function AnimsPage() {
             <button
               onClick={() => setIsPlaying(false)}
               disabled={!selectedAnim}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                selectedAnim
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${selectedAnim
                   ? "bg-slate-700/90 backdrop-blur text-white hover:bg-slate-600"
                   : "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-              }`}
+                }`}
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -122,19 +135,17 @@ export default function AnimsPage() {
                   <button
                     key={anim.id}
                     onClick={() => setSelectedAnim(anim)}
-                    className={`group relative flex-shrink-0 w-24 h-24 rounded-xl transition-all duration-200 ${
-                      selectedAnim?.id === anim.id
+                    className={`group relative flex-shrink-0 w-24 h-24 rounded-xl transition-all duration-200 ${selectedAnim?.id === anim.id
                         ? "ring-2 ring-blue-500 scale-105 shadow-xl"
                         : "hover:scale-105 hover:shadow-lg"
-                    }`}
+                      }`}
                   >
                     {/* Card Background */}
                     <div
-                      className={`absolute inset-0 rounded-xl bg-gradient-to-br ${anim.color} ${
-                        selectedAnim?.id === anim.id ? "opacity-100" : "opacity-80"
-                      } group-hover:opacity-100 transition-opacity`}
+                      className={`absolute inset-0 rounded-xl bg-gradient-to-br ${anim.color} ${selectedAnim?.id === anim.id ? "opacity-100" : "opacity-80"
+                        } group-hover:opacity-100 transition-opacity`}
                     />
-                    
+
                     {/* Content */}
                     <div className="relative h-full flex flex-col items-center justify-center text-white">
                       <div className="text-3xl">{anim.thumbnail}</div>
