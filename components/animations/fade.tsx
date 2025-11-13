@@ -1,4 +1,4 @@
-import { Assets, Application, Sprite } from 'pixi.js';
+import { Assets, Application, Sprite, Graphics, FederatedPointerEvent, AnimatedSprite } from 'pixi.js';
 import gsap from 'gsap';
 
 // PixiJS devtools için global tip tanımı
@@ -21,7 +21,7 @@ export const fadeFunction = async () => {
     await app.init({
         width: container.clientWidth,    // Container genişliği
         height: container.clientHeight,  // Container yüksekliği
-        backgroundColor: 0x15deb,        // Background color
+        backgroundColor: 0x0a0001,              // Şeffaf arka plan
         antialias: true,                 // Enable antialiasing
         resolution: 1,                   // Resolution / device pixel ratio
         preference: 'webgl',             // or 'webgpu' // Renderer preference
@@ -30,52 +30,159 @@ export const fadeFunction = async () => {
     // PixiJS devtools için global scope'a ekle
     globalThis.__PIXI_APP__ = app;
 
+    const ground = new Graphics();
+    ground.rect(0, 0, container.clientWidth, container.clientHeight/10);
+    ground.fill({ color: 0x45271f, alpha: 1 });
+    ground.y = container.clientHeight - (container.clientHeight/10);
+
+    const sky = new Graphics();
+    sky.rect(0, 0, container.clientWidth, container.clientHeight);
+    sky.zIndex = -1;
+    sky.fill({ color: 0x54b6f7, alpha: 1 });
+    sky.y = 0;
+
+
+    const createCoin = async (clickedCloud: Sprite) => {
+        const coin = new Sprite(await Assets.load('/coin.png'));
+        coin.x = clickedCloud.x;
+        coin.y = clickedCloud.y;
+        coin.scale.set(0.3);
+        coin.zIndex = 2;
+        coin.anchor.set(0.5);
+        coin.label = 'coin';
+        app.stage.addChild(coin);
+        
+        // Coin oluşturulunca hemen animasyon başlat
+        gsap.to(coin, {
+            y: container.clientHeight-100,
+            duration: 1,
+            ease: "power2.inOut"
+        });
+        
+        return coin;
+    }
+    // Mushroom karakteri oluşturma fonksiyonu
+    const createMushroom = async (x: number, y: number, scale: number = 1): Promise<AnimatedSprite> => {
+        const sheet = await Assets.load("/animatedSprites/mushroom_idle.json");
+        const mushroom = new AnimatedSprite(sheet.animations.idle);
+        mushroom.x = x;
+        mushroom.y = y;
+        mushroom.anchor.set(0.5);
+        mushroom.scale.set(scale);
+        mushroom.animationSpeed = 0.1;
+        mushroom.play();
+        mushroom.label = 'mushroom-idle';
+        mushroom.zIndex = 2;
+        app.stage.addChild(mushroom);
+        return mushroom;
+    };
+    // Smiley Face oluşturma fonksiyonu
+    const createSmileyFace = async (label: string, x: number, y: number, scale: number = 0.3): Promise<Sprite> => {
+        const smileyFace = new Sprite(await Assets.load('/smile-face.png'));
+        smileyFace.x = x;
+        smileyFace.y = y;
+        smileyFace.scale.set(scale);
+        smileyFace.zIndex = 2;
+        smileyFace.anchor.set(0.5);
+        smileyFace.label = label;
+        app.stage.addChild(smileyFace);
+        return smileyFace;
+    };
+
+    // Mushroom karakterini oluştur (ground seviyesinde)
+    const mushroom = await createMushroom(
+        container.clientWidth / 2, 
+        container.clientHeight - (container.clientHeight / 10) - 64, // Ground seviyesinin biraz üstünde
+        3 // Scale
+    );
+
+    // Önce face'leri oluştur
+    const smileyFace1 = await createSmileyFace('smiley-face-1', container.clientWidth/2 -300, container.clientHeight/2 -200, 0.3);
+    const smileyFace2 = await createSmileyFace('smiley-face-2', container.clientWidth/2 +200, container.clientHeight/2 -150, 0.3);
+
+    // Cloud oluşturma fonksiyonu - ilgili smiley face'i parametre olarak al
+    const createCloud = async (
+        label: string, 
+        x: number, 
+        y: number, 
+        smileyFace: Sprite,
+        scale: number = 0.5
+    ): Promise<Sprite> => {
+        
+        const cloudTexture = await Assets.load('/cloud.png');
+        const cloud = new Sprite(cloudTexture);
+        cloud.x = x;
+        cloud.y = y;
+        cloud.scale.set(scale);
+        cloud.zIndex = 1;
+        cloud.anchor.set(0.5);
+        cloud.eventMode = 'static';
+        cloud.cursor = 'pointer';
+        cloud.label = label;
+        app.stage.addChild(cloud);
+
+        // Her cloud için bir angry face oluştur
+        const angryFace = new Sprite(await Assets.load('/angry-face.png'));
+        angryFace.x = x;
+        angryFace.y = y;
+        angryFace.scale.set(0.3);
+        angryFace.zIndex = 2;
+        angryFace.visible = false;
+        angryFace.anchor.set(0.5);
+        angryFace.label = `angry-face-${label}`;
+        app.stage.addChild(angryFace);
+
+        // Click handler
+        function onClick(event: FederatedPointerEvent) {
+            console.log('Clicked:', label);
+            cloud.eventMode = 'none';
+            createCoin(cloud);
+            
+            // Timeline oluştur
+            const tl = gsap.timeline({
+                onStart: () => {
+                    // Animasyon başında: smile gizle, sad göster
+                    smileyFace.visible = false;
+                    angryFace.visible = true;
+                },
+                onComplete: () => {
+                    // Animasyon bitiminde: sad gizle, smile göster
+                    angryFace.visible = false;
+                    smileyFace.visible = true;
+                }
+            });
+
+            // Bulut ve sad face'i aynı anda hareket ettir
+            tl.to([cloud, angryFace], {
+                x: "+=100", // Mevcut pozisyondan +100
+                duration: 0.5,
+                ease: "power2.inOut"
+            })
+            .to([cloud, angryFace], {
+                x: "-=120", // Sonra -120 (toplam -20 olur)
+                duration: 0.5,
+                ease: "power2.inOut"
+            })
+            .to([cloud, angryFace], {
+                x: "+=20", // Başlangıç pozisyonuna dön
+                duration: 0.3,
+                ease: "power2.inOut"
+            }).then(() => cloud.eventMode = 'static');;
+            
+        }
+
+        cloud.on('pointerdown', onClick);
+        return cloud;
+    };
+
+    // Sonra cloud'ları oluştur - her cloud'a ilgili smiley face'i geç
+    const cloud1 = await createCloud('cloud-1', container.clientWidth/2 -300, container.clientHeight/2 -200, smileyFace1, 0.5);
+    const cloud2 = await createCloud('cloud-2', container.clientWidth/2 +200, container.clientHeight/2 -150, smileyFace2, 0.6);
+
+    app.stage.addChild(ground);
+    app.stage.addChild(sky);
+
     // Canvas'ı belirli container'a ekle
     container.appendChild(app.canvas);
-
-    // Start adding content to your application
-    // Next.js'de public klasörüne erişim için '/' ile başlamalı
-    const texture = await Assets.load('/demon-arm.png');
-    const rightArm = new Sprite(texture);
-    const leftArm = new Sprite(texture);
-    
-    // Anchor point'i merkeze ayarla (0.5 = %50, yani tam ortası)
-    // Bu sayede rotation merkezden yapılır, saçma görünmez
-    rightArm.anchor.set(0.8);
-    leftArm.anchor.set(0.8);
-    
-    // Sprite'ı ekranın ortasına yerleştir
-    rightArm.x = container.clientWidth / 2 +600;
-    rightArm.y = container.clientHeight / 2;
-    leftArm.x = container.clientWidth / 2 -600;
-    leftArm.y = container.clientHeight / 2;
-
-    app.stage.addChild(rightArm);
-    app.stage.addChild(leftArm);
-
-    // Fade animasyonu - rotation artık merkezden yapılacak
-    // GSAP rotation için derece kullanır, 360 = tam tur
-    gsap.to(rightArm, {
-        rotation: 1, 
-        x: container.clientWidth / 2 + 700, 
-        y: container.clientHeight / 2 + 100, 
-        duration: 1, 
-        repeat: -1, 
-        yoyo: true,
-        ease: "power2.inOut"
-    });
-
-    // Mirror the leftArm image horizontally by setting scale.x to -1
-    leftArm.scale.x = -1;
-    gsap.to(leftArm, {
-        rotation: -1, 
-        
-        x: container.clientWidth / 2 - 700, 
-        y: container.clientHeight / 2 + 100, 
-        duration: 1, 
-        repeat: -1, 
-        yoyo: true,
-        ease: "power2.inOut"
-    });
 
 }

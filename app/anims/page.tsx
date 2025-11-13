@@ -60,24 +60,7 @@ export default function AnimsPage() {
               </div>
             )}
 
-            {/* Animation Preview Element */}
-            {selectedAnim && (
-              <div className="relative z-10 flex flex-col items-center gap-4">
-                <div
-                  className={`w-32 h-32 rounded-2xl bg-gradient-to-br ${selectedAnim.color} shadow-2xl flex items-center justify-center text-6xl`}
-                >
-                  {selectedAnim.thumbnail}
-                </div>
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold text-white mb-1">
-                    {selectedAnim.name}
-                  </h3>
-                  <p className="text-sm text-slate-400">
-                    Animasyon oynatma alanı
-                  </p>
-                </div>
-              </div>
-            )}
+            
 
             {!selectedAnim && (
               <div className="text-center">
@@ -93,27 +76,6 @@ export default function AnimsPage() {
           <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              disabled={!selectedAnim}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${selectedAnim
-                  ? "bg-blue-500/90 backdrop-blur text-white hover:bg-blue-600 shadow-lg"
-                  : "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-                }`}
-            >
-              {isPlaying ? (
-                <>
-                  <Pause className="w-4 h-4" />
-                  Durdur
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4" />
-                  Oynat
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => setIsPlaying(false)}
               disabled={!selectedAnim}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${selectedAnim
                   ? "bg-slate-700/90 backdrop-blur text-white hover:bg-slate-600"
