@@ -1,6 +1,7 @@
+"use client";
+
 import { Assets, Application, Sprite, Graphics, FederatedPointerEvent, AnimatedSprite } from 'pixi.js';
 import gsap from 'gsap';
-
 // PixiJS devtools için global tip tanımı
 declare global {
     var __PIXI_APP__: Application;
@@ -13,7 +14,6 @@ export const fadeFunction = async () => {
         console.error('fade-container bulunamadı!');
         return;
     }
-
     // Create a new application
     const app = new Application();
 
@@ -63,19 +63,70 @@ export const fadeFunction = async () => {
     }
     // Mushroom karakteri oluşturma fonksiyonu
     const createMushroom = async (x: number, y: number, scale: number = 1): Promise<AnimatedSprite> => {
-        const sheet = await Assets.load("/animatedSprites/mushroom_idle.json");
-        const mushroom = new AnimatedSprite(sheet.animations.idle);
+        // İki animasyon setini yükle
+        const idleSheet = await Assets.load("/animatedSprites/mushroom_idle.json");
+        const runSheet = await Assets.load("/animatedSprites/mushroom_run.json");
+        
+        // Idle animasyonuyla başla
+        const mushroom = new AnimatedSprite(idleSheet.animations.idle);
         mushroom.x = x;
         mushroom.y = y;
         mushroom.anchor.set(0.5);
         mushroom.scale.set(scale);
-        mushroom.animationSpeed = 0.1;
+        mushroom.animationSpeed = 0.15;
         mushroom.play();
-        mushroom.label = 'mushroom-idle';
+        mushroom.label = 'mushroom';
         mushroom.zIndex = 2;
         app.stage.addChild(mushroom);
+
+        // Hareket durumu
+        let isMoving = false;
+        const moveSpeed = 5;
+        const pressedKeys = new Set<string>();
+
+        // Keyboard kontrolü
+        window.addEventListener('keydown', (event: KeyboardEvent) => {
+            pressedKeys.add(event.key);
+            
+            if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+                // Eğer idle animasyondaysa run'a geç
+                if (!isMoving) {
+                    mushroom.textures = runSheet.animations.run;
+                    mushroom.play();
+                    isMoving = true;
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (event: KeyboardEvent) => {
+            pressedKeys.delete(event.key);
+            
+            // Hiç ok tuşu basılı değilse idle'a dön
+            if (!pressedKeys.has('ArrowRight') && !pressedKeys.has('ArrowLeft')) {
+                if (isMoving) {
+                    mushroom.textures = idleSheet.animations.idle;
+                    mushroom.play();
+                    isMoving = false;
+                }
+            }
+        });
+
+        // Her frame'de pozisyonu güncelle
+        app.ticker.add(() => {
+            if (pressedKeys.has('ArrowRight')) {
+                mushroom.x += moveSpeed;
+                mushroom.scale.x = -Math.abs(mushroom.scale.x); // Sağa bak
+            }
+            if (pressedKeys.has('ArrowLeft')) {
+                mushroom.x -= moveSpeed;
+                mushroom.scale.x = +Math.abs(mushroom.scale.x); // Sola bak (mirror)
+            }
+        });
+
         return mushroom;
     };
+
+    
     // Smiley Face oluşturma fonksiyonu
     const createSmileyFace = async (label: string, x: number, y: number, scale: number = 0.3): Promise<Sprite> => {
         const smileyFace = new Sprite(await Assets.load('/smile-face.png'));
