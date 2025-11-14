@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Play, Pause, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { fadeFunction } from "@/components/animations/fade";
+import { earthquakeFunction } from "@/components/animations/earthquake";
 
 type Animation = {
   id: string;
@@ -31,6 +32,7 @@ export default function AnimsPage() {
         fadeFunction();
         break;
       case "2":
+        earthquakeFunction();
         break;
       case "3":
         break;
@@ -59,7 +61,10 @@ export default function AnimsPage() {
               <div id="fade-container" className="absolute inset-0 w-full h-full">
               </div>
             )}
-
+            {selectedAnim && selectedAnim.id === "2" && (
+              <div id="earthquake-container" className="absolute inset-0 w-full h-full">
+              </div>
+            )}
             
 
             {!selectedAnim && (

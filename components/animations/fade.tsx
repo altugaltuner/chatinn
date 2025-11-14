@@ -42,15 +42,22 @@ export const fadeFunction = async () => {
     sky.y = 0;
 
 
-    const createCoin = async (clickedCloud: Sprite) => {
+    let coinCounter = 0;
+    const coins: Sprite[] = []; // Aktif coin'leri takip etmek için
+    
+    const createCoin = async (clickedCloud: Sprite, mushroom: AnimatedSprite) => {
+        coinCounter += 1;
         const coin = new Sprite(await Assets.load('/coin.png'));
         coin.x = clickedCloud.x;
         coin.y = clickedCloud.y;
         coin.scale.set(0.3);
         coin.zIndex = 2;
         coin.anchor.set(0.5);
-        coin.label = 'coin';
+        coin.label = `coin-${coinCounter}`;
         app.stage.addChild(coin);
+        
+        // Coin'i diziye ekle
+        coins.push(coin);
         
         // Coin oluşturulunca hemen animasyon başlat
         gsap.to(coin, {
@@ -58,7 +65,7 @@ export const fadeFunction = async () => {
             duration: 1,
             ease: "power2.inOut"
         });
-        
+
         return coin;
     }
     // Mushroom karakteri oluşturma fonksiyonu
@@ -121,10 +128,49 @@ export const fadeFunction = async () => {
                 mushroom.x -= moveSpeed;
                 mushroom.scale.x = +Math.abs(mushroom.scale.x); // Sola bak (mirror)
             }
+            
+            // Coin çarpışma kontrolü - her frame'de kontrol et
+            for (let i = coins.length - 1; i >= 0; i--) {
+                const coin = coins[i];
+                // Mutlak mesafeyi hesapla
+                const distanceX = Math.abs(mushroom.x - coin.x);
+                const distanceY = Math.abs(mushroom.y - coin.y);
+                
+                // Eğer mantar coin'e yeterince yakınsa, patlat
+                if (distanceX < 50 && distanceY < 50) {
+                    explodeCoin(coin);
+                }
+            }
         });
 
         return mushroom;
     };
+
+    const explodeCoin = (coin: Sprite) => {
+        console.log('explodeCoin:', coin.label);
+        
+        // Coin'i diziden çıkar
+        const index = coins.indexOf(coin);
+        if (index > -1) {
+            coins.splice(index, 1);
+        }
+        
+        // Patlama animasyonu - scale değerini animasyon yap
+        const scaleObj = { value: coin.scale.x };
+        gsap.to(scaleObj, {
+            value: 0,
+            duration: 0.3,
+            ease: "power2.inOut",
+            onUpdate: () => {
+                coin.scale.set(scaleObj.value);
+            },
+            onComplete: () => {
+                // Animasyon bitince coin'i stage'den kaldır
+                app.stage.removeChild(coin);
+                coin.destroy();
+            }
+        });
+    }
 
     
     // Smiley Face oluşturma fonksiyonu
@@ -187,7 +233,7 @@ export const fadeFunction = async () => {
         function onClick(event: FederatedPointerEvent) {
             console.log('Clicked:', label);
             cloud.eventMode = 'none';
-            createCoin(cloud);
+            createCoin(cloud, mushroom);
             
             // Timeline oluştur
             const tl = gsap.timeline({
